@@ -1,0 +1,288 @@
+{% extends "base.html" %}
+
+{% block title %}Provider Dashboard - Servisto{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Welcome Header -->
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900 mb-2">
+            Welcome back, {{ current_user.first_name }}!
+        </h1>
+        <p class="text-gray-600">Here's your business overview and recent activity.</p>
+    </div>
+
+    {% if profile_incomplete or not has_services %}
+    <div class="bg-yellow-50 border border-yellow-200 rounded-2xl p-5 mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4" id="setup-banner">
+        <div>
+            <div class="font-semibold text-yellow-900"><i class="fas fa-lightbulb mr-2"></i>Finish setting up so customers can find you</div>
+            <p class="text-sm text-yellow-800 mt-1">
+                {% if not has_services %}You appear in search once you have at least one active service. {% endif %}{% if profile_incomplete %}Add your service type and area so customers searching for them can find you.{% endif %}
+            </p>
+        </div>
+        <div class="flex gap-3">
+            {% if profile_incomplete %}<a href="{{ url_for('provider.profile') }}" class="bg-yellow-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-yellow-700">Complete profile</a>{% endif %}
+            {% if not has_services %}<a href="{{ url_for('provider.services') }}" class="bg-white border border-yellow-300 text-yellow-900 px-4 py-2 rounded-lg text-sm font-medium hover:bg-yellow-100">Add a service</a>{% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Quick Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <!-- Total Bookings -->
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+            <div class="flex items-center">
+                <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mr-4">
+                    <i class="fas fa-calendar-alt text-blue-600 text-xl"></i>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-600">Total Bookings</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ total_bookings }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pending Requests -->
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+            <div class="flex items-center">
+                <div class="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center mr-4">
+                    <i class="fas fa-clock text-yellow-600 text-xl"></i>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-600">Pending</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ pending_bookings }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Monthly Earnings -->
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+            <div class="flex items-center">
+                <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mr-4">
+                    <i class="fas fa-indian-rupee-sign text-green-600 text-xl"></i>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-600">Monthly Earnings</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ monthly_earnings|inr }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Rating -->
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+            <div class="flex items-center">
+                <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mr-4">
+                    <i class="fas fa-star text-purple-600 text-xl"></i>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-600">Average Rating</p>
+                    <div class="flex items-center">
+                        <div class="text-2xl font-bold text-gray-900 mr-2">
+                            {{ "%.1f"|format(provider.average_rating) }}
+                        </div>
+                        <div class="flex text-yellow-400 text-sm">
+                            {% for i in range(5) %}
+                                {% if i < provider.average_rating|int %}
+                                    <i class="fas fa-star"></i>
+                                {% else %}
+                                    <i class="far fa-star"></i>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- Recent Bookings -->
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100">
+            <div class="p-6 border-b border-gray-100 flex justify-between items-center">
+                <h2 class="text-xl font-semibold text-gray-900">Recent Bookings</h2>
+                <a href="{{ url_for('provider.bookings') }}" class="text-blue-600 hover:text-blue-700 text-sm font-medium">
+                    View All
+                </a>
+            </div>
+            <div class="p-6">
+                {% if recent_bookings %}
+                <div class="space-y-4">
+                    {% for booking in recent_bookings %}
+                    <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                        <div class="flex items-center">
+                            <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mr-4">
+                                <i class="fas fa-user text-blue-600"></i>
+                            </div>
+                            <div>
+                                <p class="font-medium text-gray-900">{{ booking.first_name }} {{ booking.last_name }}</p>
+                                <p class="text-sm text-gray-600">{{ booking.service_name }}</p>
+                                <p class="text-xs text-gray-500">{{ booking.service_date }} at {{ booking.service_time|time12 }}</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <span class="px-3 py-1 rounded-full text-xs font-medium 
+                                {% if booking.status == 'completed' %}bg-green-100 text-green-800
+                                {% elif booking.status == 'confirmed' %}bg-blue-100 text-blue-800
+                                {% elif booking.status == 'pending' %}bg-yellow-100 text-yellow-800
+                                {% else %}bg-red-100 text-red-800{% endif %}">
+                                {{ booking.status|title }}
+                            </span>
+                            <a href="{{ url_for('provider.bookings') }}" class="text-blue-600 hover:text-blue-700">
+                                <i class="fas fa-ellipsis-h"></i>
+                            </a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-8">
+                    <i class="fas fa-calendar-times text-gray-300 text-4xl mb-4"></i>
+                    <p class="text-gray-600 mb-4">No bookings yet</p>
+                    <p class="text-gray-500 text-sm">Your bookings will appear here when customers book your services.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="space-y-6">
+            <!-- Availability Toggle -->
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Availability</h3>
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                        <p class="text-gray-600">Current Status</p>
+                        <p class="font-semibold text-gray-900 capitalize">{{ provider.availability_status }}</p>
+                    </div>
+                    <div class="flex flex-wrap gap-2" id="availability-buttons">
+                        <button class="availability-btn px-4 py-2 rounded-lg text-sm font-medium transition duration-200
+                            {% if provider.availability_status == 'available' %}bg-green-100 text-green-800 border border-green-300
+                            {% else %}bg-gray-100 text-gray-600 hover:bg-green-50{% endif %}"
+                            data-status="available">
+                            Available
+                        </button>
+                        <button class="availability-btn px-4 py-2 rounded-lg text-sm font-medium transition duration-200
+                            {% if provider.availability_status == 'busy' %}bg-yellow-100 text-yellow-800 border border-yellow-300
+                            {% else %}bg-gray-100 text-gray-600 hover:bg-yellow-50{% endif %}"
+                            data-status="busy">
+                            Busy
+                        </button>
+                        <button class="availability-btn px-4 py-2 rounded-lg text-sm font-medium transition duration-200
+                            {% if provider.availability_status == 'unavailable' %}bg-red-100 text-red-800 border border-red-300
+                            {% else %}bg-gray-100 text-gray-600 hover:bg-red-50{% endif %}"
+                            data-status="unavailable">
+                            Unavailable
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Links -->
+            <div class="grid grid-cols-2 gap-4">
+                <a href="{{ url_for('provider.bookings') }}" 
+                   class="bg-blue-50 border border-blue-200 rounded-xl p-4 text-center hover:bg-blue-100 transition duration-200 group">
+                    <i class="fas fa-calendar-check text-blue-600 text-xl mb-2 group-hover:text-blue-700"></i>
+                    <p class="font-semibold text-blue-800">Manage Bookings</p>
+                </a>
+                <a href="{{ url_for('provider.services') }}" 
+                   class="bg-green-50 border border-green-200 rounded-xl p-4 text-center hover:bg-green-100 transition duration-200 group">
+                    <i class="fas fa-tools text-green-600 text-xl mb-2 group-hover:text-green-700"></i>
+                    <p class="font-semibold text-green-800">My Services</p>
+                </a>
+                <a href="{{ url_for('provider.profile') }}" 
+                   class="bg-purple-50 border border-purple-200 rounded-xl p-4 text-center hover:bg-purple-100 transition duration-200 group">
+                    <i class="fas fa-user-edit text-purple-600 text-xl mb-2 group-hover:text-purple-700"></i>
+                    <p class="font-semibold text-purple-800">Edit Profile</p>
+                </a>
+                <a href="{{ url_for('provider.reviews') }}" 
+                   class="bg-yellow-50 border border-yellow-200 rounded-xl p-4 text-center hover:bg-yellow-100 transition duration-200 group">
+                    <i class="fas fa-star text-yellow-600 text-xl mb-2 group-hover:text-yellow-700"></i>
+                    <p class="font-semibold text-yellow-800">Reviews</p>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Availability toggle
+    const availabilityButtons = document.querySelectorAll('.availability-btn');
+    
+    availabilityButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const newStatus = this.getAttribute('data-status');
+            
+            // Show loading state
+            const originalText = this.textContent;
+            this.innerHTML = '<div class="loading-spinner"></div>';
+            this.disabled = true;
+            
+            // Send AJAX request
+            fetch('{{ url_for("provider.update_availability") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `availability_status=${newStatus}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Update button states
+                    availabilityButtons.forEach(btn => {
+                        btn.classList.remove(
+                            'bg-green-100', 'text-green-800', 'border-green-300',
+                            'bg-yellow-100', 'text-yellow-800', 'border-yellow-300',
+                            'bg-red-100', 'text-red-800', 'border-red-300'
+                        );
+                        btn.classList.add('bg-gray-100', 'text-gray-600');
+                    });
+                    
+                    // Highlight current status
+                    this.classList.remove('bg-gray-100', 'text-gray-600');
+                    if (newStatus === 'available') {
+                        this.classList.add('bg-green-100', 'text-green-800', 'border-green-300');
+                    } else if (newStatus === 'busy') {
+                        this.classList.add('bg-yellow-100', 'text-yellow-800', 'border-yellow-300');
+                    } else {
+                        this.classList.add('bg-red-100', 'text-red-800', 'border-red-300');
+                    }
+                    
+                    // Show success message
+                    showFlashMessage(data.message, 'success');
+                } else {
+                    showFlashMessage(data.message, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showFlashMessage('An error occurred. Please try again.', 'error');
+            })
+            .finally(() => {
+                // Restore button state
+                this.textContent = originalText;
+                this.disabled = false;
+            });
+        });
+    });
+    
+    function showFlashMessage(message, type) {
+        // Create flash message element
+        const flashDiv = document.createElement('div');
+        flashDiv.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 ${
+            type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+        }`;
+        flashDiv.textContent = message;
+        document.body.appendChild(flashDiv);
+        
+        // Remove after 3 seconds
+        setTimeout(() => {
+            flashDiv.remove();
+        }, 3000);
+    }
+});
+</script>
+{% endblock %}

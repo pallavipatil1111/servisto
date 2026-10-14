@@ -1,0 +1,72 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  tests:
+    name: pytest (Python ${{ matrix.python }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python: ["3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+          cache: pip
+      - run: pip install -r requirements-dev.txt
+      - name: Unit and integration tests
+        run: pytest --ignore=tests/e2e -v
+
+  e2e:
+    name: Playwright browser tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements-dev.txt
+      - run: python -m playwright install --with-deps chromium
+      - run: pytest tests/e2e -v
+
+  css:
+    name: Tailwind CSS is up to date
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Rebuild with the standalone Tailwind CLI
+        run: |
+          curl -sSfL -o tailwindcss https://github.com/tailwindlabs/tailwindcss/releases/download/v3.4.17/tailwindcss-linux-x64
+          chmod +x tailwindcss
+          ./tailwindcss -i assets/tailwind.css -o static/css/tailwind.css --minify
+          rm tailwindcss
+      - name: Fail if templates use classes missing from the committed CSS
+        run: git diff --exit-code -- static/css/tailwind.css
+
+  docker:
+    name: Docker image
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t servisto .
+      - name: Run the container and use the site
+        run: |
+          docker run -d --name servisto -p 8000:8000 -e SECRET_KEY=ci-secret servisto
+          for i in $(seq 1 30); do curl -sf http://localhost:8000/healthz && break; sleep 1; done
+          curl -sf http://localhost:8000/ | grep -q "Jadhav Plumbing Works"
+          # Log in as the demo customer with the CSRF token from the login page.
+          token=$(curl -sf -c jar http://localhost:8000/login | grep -o 'name="csrf-token" content="[^"]*"' | cut -d'"' -f4)
+          curl -sf -b jar -c jar -o /dev/null -w '%{redirect_url}\n' \
+            --data-urlencode "csrf_token=$token" \
+            --data-urlencode "email=customer@servisto.demo" --data-urlencode "password=demo1234" \
+            http://localhost:8000/login | grep -q '/user/dashboard'
+          curl -sf -b jar http://localhost:8000/user/bookings | grep -q "BrightSpark Electricals"
+          [ "$(docker inspect -f '{{.Config.User}}' servisto)" = "servisto" ]
+      - if: failure()
+        run: docker logs servisto

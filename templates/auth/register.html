@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% block title %}Register - Servisto{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md mx-auto bg-white rounded-2xl shadow-xl overflow-hidden">
+        <div class="px-6 py-8">
+            <!-- Header -->
+            <div class="text-center mb-8">
+                <div class="mx-auto w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mb-4">
+                    <i class="fas fa-user-plus text-white text-2xl"></i>
+                </div>
+                <h2 class="text-3xl font-bold text-gray-900 mb-2">Create Account</h2>
+                <p class="text-gray-600">Join thousands of service providers and customers</p>
+            </div>
+
+            <!-- Registration Form -->
+            <form method="POST" class="space-y-6">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <!-- User Type Selection -->
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    <label class="relative">
+                        <input type="radio" name="user_type" value="user" class="hidden peer" {% if user_type != 'provider' %}checked{% endif %}>
+                        <div class="p-4 border-2 border-gray-200 rounded-lg text-center cursor-pointer transition-all duration-200 peer-checked:border-blue-500 peer-checked:bg-blue-50 peer-checked:ring-2 peer-checked:ring-blue-200">
+                            <i class="fas fa-user text-2xl text-gray-600 mb-2 peer-checked:text-blue-600"></i>
+                            <div class="font-medium text-gray-900 peer-checked:text-blue-900">Customer</div>
+                            <div class="text-sm text-gray-500">Looking for services</div>
+                        </div>
+                    </label>
+                    
+                    <label class="relative">
+                        <input type="radio" name="user_type" value="provider" class="hidden peer" {% if user_type == 'provider' %}checked{% endif %}>
+                        <div class="p-4 border-2 border-gray-200 rounded-lg text-center cursor-pointer transition-all duration-200 peer-checked:border-blue-500 peer-checked:bg-blue-50 peer-checked:ring-2 peer-checked:ring-blue-200">
+                            <i class="fas fa-tools text-2xl text-gray-600 mb-2 peer-checked:text-blue-600"></i>
+                            <div class="font-medium text-gray-900 peer-checked:text-blue-900">Provider</div>
+                            <div class="text-sm text-gray-500">Offering services</div>
+                        </div>
+                    </label>
+                </div>
+
+                <!-- Name Fields -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label for="first_name" class="block text-sm font-medium text-gray-700 mb-2">First Name</label>
+                        <input type="text" id="first_name" name="first_name" value="{{ first_name or '' }}" required
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
+                               placeholder="John">
+                    </div>
+                    <div>
+                        <label for="last_name" class="block text-sm font-medium text-gray-700 mb-2">Last Name</label>
+                        <input type="text" id="last_name" name="last_name" value="{{ last_name or '' }}" required
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
+                               placeholder="Doe">
+                    </div>
+                </div>
+
+                <!-- Email -->
+                <div>
+                    <label for="email" class="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
+                    <input type="email" id="email" name="email" value="{{ email or '' }}" required
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
+                           placeholder="john@example.com">
+                </div>
+
+                <!-- Phone -->
+                <div>
+                    <label for="phone" class="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
+                    <input type="tel" id="phone" name="phone" value="{{ phone or '' }}"
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
+                           placeholder="+1 (555) 123-4567">
+                </div>
+
+                <!-- Password -->
+                <div>
+                    <label for="password" class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                    <input type="password" id="password" name="password" required minlength="8" autocomplete="new-password"
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
+                           placeholder="••••••••">
+                    <p class="mt-1 text-sm text-gray-500">Must be at least 8 characters</p>
+                </div>
+
+                <!-- Confirm Password -->
+                <div>
+                    <label for="confirm_password" class="block text-sm font-medium text-gray-700 mb-2">Confirm Password</label>
+                    <input type="password" id="confirm_password" name="confirm_password" required
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
+                           placeholder="••••••••">
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit"
+                        class="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 focus:ring-4 focus:ring-blue-200 focus:outline-none transition duration-200 font-medium">
+                    Create Account
+                </button>
+
+                <!-- Login Link -->
+                <div class="text-center">
+                    <p class="text-gray-600">
+                        Already have an account?
+                        <a href="{{ url_for('auth.login') }}" class="text-blue-600 hover:text-blue-700 font-medium transition duration-200">
+                            Sign in here
+                        </a>
+                    </p>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

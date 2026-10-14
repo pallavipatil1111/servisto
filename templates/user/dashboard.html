@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Servisto{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Welcome Section -->
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900 mb-2">
+            Welcome back, {{ current_user.first_name }}!
+        </h1>
+        <p class="text-gray-600">Here's what's happening with your service requests.</p>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+            <div class="flex items-center">
+                <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mr-4">
+                    <i class="fas fa-calendar-check text-blue-600 text-xl"></i>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-600">Total Bookings</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ total_bookings }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+            <div class="flex items-center">
+                <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mr-4">
+                    <i class="fas fa-check-circle text-green-600 text-xl"></i>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-600">Completed</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ completed_bookings }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+            <div class="flex items-center">
+                <div class="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center mr-4">
+                    <i class="fas fa-clock text-yellow-600 text-xl"></i>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-600">Pending</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ pending_bookings }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- Recent Bookings -->
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100">
+            <div class="p-6 border-b border-gray-100">
+                <h2 class="text-xl font-semibold text-gray-900">Recent Bookings</h2>
+            </div>
+            <div class="p-6">
+                {% if recent_bookings %}
+                <div class="space-y-4">
+                    {% for booking in recent_bookings %}
+                    <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                        <div class="flex items-center">
+                            <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mr-4">
+                                <i class="fas fa-tools text-blue-600"></i>
+                            </div>
+                            <div>
+                                <p class="font-medium text-gray-900">{{ booking.service_name }}</p>
+                                <p class="text-sm text-blue-600">{{ booking.business_name }}</p>
+                                <p class="text-sm text-gray-600">{{ booking.service_date }} at {{ booking.service_time|time12 }}</p>
+                            </div>
+                        </div>
+                        <span class="px-3 py-1 rounded-full text-xs font-medium 
+                            {% if booking.status == 'completed' %}bg-green-100 text-green-800
+                            {% elif booking.status == 'confirmed' %}bg-blue-100 text-blue-800
+                            {% elif booking.status == 'pending' %}bg-yellow-100 text-yellow-800
+                            {% else %}bg-red-100 text-red-800{% endif %}">
+                            {{ booking.status|title }}
+                        </span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-8">
+                    <i class="fas fa-calendar-times text-gray-300 text-4xl mb-4"></i>
+                    <p class="text-gray-600 mb-4">No bookings yet</p>
+                    <a href="{{ url_for('user.search') }}" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition duration-200">
+                        Find Services
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Quick Links -->
+        <div class="space-y-6">
+            <!-- Find Services Card -->
+            <div class="bg-gradient-to-r from-blue-500 to-blue-600 rounded-2xl p-6 text-white">
+                <h3 class="text-xl font-semibold mb-2">Need a Service?</h3>
+                <p class="text-blue-100 mb-4">Find trusted professionals for your home needs</p>
+                <a href="{{ url_for('user.search') }}" class="bg-white text-blue-600 px-6 py-2 rounded-lg font-semibold hover:bg-blue-50 transition duration-200 inline-block">
+                    Find Services
+                </a>
+            </div>
+
+            <!-- View Bookings Card -->
+            <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                <h3 class="text-xl font-semibold text-gray-900 mb-2">Manage Bookings</h3>
+                <p class="text-gray-600 mb-4">View and manage all your service requests</p>
+                <a href="{{ url_for('user.bookings') }}" class="bg-gray-900 text-white px-6 py-2 rounded-lg font-semibold hover:bg-gray-800 transition duration-200 inline-block">
+                    View All Bookings
+                </a>
+            </div>
+
+            <!-- Account Card -->
+            <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                <h3 class="text-xl font-semibold text-gray-900 mb-2">Leave a review</h3>
+                <p class="text-gray-600 mb-4">Finished jobs can be rated, which helps other customers choose.</p>
+                <a href="{{ url_for('user.bookings', status='completed') }}" class="border-2 border-gray-300 text-gray-700 px-6 py-2 rounded-lg font-semibold hover:bg-gray-50 transition duration-200 inline-block">
+                    Completed bookings
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

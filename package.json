@@ -1,0 +1,12 @@
+{
+  "name": "servisto-css",
+  "private": true,
+  "description": "Only used to rebuild static/css/tailwind.css after changing templates.",
+  "scripts": {
+    "build:css": "tailwindcss -i assets/tailwind.css -o static/css/tailwind.css --minify",
+    "watch:css": "tailwindcss -i assets/tailwind.css -o static/css/tailwind.css --watch"
+  },
+  "devDependencies": {
+    "tailwindcss": "3.4.17"
+  }
+}

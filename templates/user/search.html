@@ -1,0 +1,264 @@
+{% extends "base.html" %}
+
+{% block title %}Find Services - Servisto{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header -->
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900 mb-2">Find Service Providers</h1>
+        <p class="text-gray-600">Discover trusted professionals in your area</p>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        <!-- Filters Sidebar -->
+        <div class="lg:col-span-1">
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sticky top-24">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Filters</h3>
+                
+                <form method="GET" class="space-y-6" id="filters">
+                    <!-- Service Type -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Service Type</label>
+                        <select name="service_type" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            <option value="">All Services</option>
+                            {% for service_type in service_types %}
+                            <option value="{{ service_type }}" {% if search_params.service_type == service_type %}selected{% endif %}>
+                                {{ service_type|title }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Location -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Location</label>
+                        <input type="text" name="location" value="{{ search_params.location }}" 
+                               placeholder="Enter city or area"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+
+                    <!-- Minimum Rating -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Minimum Rating</label>
+                        <select name="min_rating" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            <option value="0" {% if search_params.min_rating == 0 %}selected{% endif %}>Any Rating</option>
+                            <option value="4.5" {% if search_params.min_rating == 4.5 %}selected{% endif %}>4.5+ Stars</option>
+                            <option value="4.0" {% if search_params.min_rating == 4.0 %}selected{% endif %}>4.0+ Stars</option>
+                            <option value="3.5" {% if search_params.min_rating == 3.5 %}selected{% endif %}>3.5+ Stars</option>
+                            <option value="3.0" {% if search_params.min_rating == 3.0 %}selected{% endif %}>3.0+ Stars</option>
+                        </select>
+                    </div>
+
+                    <!-- Filter Buttons -->
+                    <div class="space-y-3">
+                        <button type="submit" 
+                                class="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-200 font-medium transition duration-200">
+                            Apply Filters
+                        </button>
+                        <a href="{{ url_for('user.search') }}" 
+                           class="w-full border border-gray-300 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-50 font-medium transition duration-200 block text-center">
+                            Clear All
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div class="lg:col-span-3">
+            <!-- Search Results Header -->
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                        <h2 class="text-xl font-semibold text-gray-900">
+                            {% if providers %}
+                                {{ providers|length }} Provider{% if providers|length != 1 %}s{% endif %} Found
+                            {% else %}
+                                No Providers Found
+                            {% endif %}
+                        </h2>
+                        {% if search_params.service_type or search_params.location or search_params.min_rating %}
+                        <p class="text-gray-600 text-sm mt-1">
+                            {% if search_params.service_type %}Service: {{ search_params.service_type|title }}{% endif %}
+                            {% if search_params.location %}in {{ search_params.location|title }}{% endif %}
+                            {% if search_params.min_rating %}with {{ search_params.min_rating }}+ rating{% endif %}
+                        </p>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Sort Options -->
+                    <div class="mt-4 sm:mt-0">
+                        <select name="sort" form="filters" aria-label="Sort providers" onchange="this.form.submit()"
+                                class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm">
+                            {% for value, label in [('recommended', 'Recommended'), ('rating', 'Highest Rated'), ('reviews', 'Most Reviews'), ('price', 'Price: Low to High')] %}
+                            <option value="{{ value }}" {% if search_params.sort == value %}selected{% endif %}>Sort by: {{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Providers Grid -->
+            {% if providers %}
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {% for provider in providers %}
+                <div class="service-card bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition duration-200">
+                    <!-- Provider Header -->
+                    <div class="p-6 border-b border-gray-100">
+                        <div class="flex items-start justify-between">
+                            <div class="flex items-start space-x-4">
+                                <!-- Provider Avatar -->
+                                <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center">
+                                    <i class="fas {{ getServiceIcon(provider.service_type) }} text-white text-xl"></i>
+                                </div>
+                                
+                                <!-- Provider Info -->
+                                <div class="flex-1">
+                                    <h3 class="text-lg font-semibold text-gray-900">{{ provider.business_name }}</h3>
+                                    <p class="text-blue-600 font-medium">{{ provider.service_type|title }}</p>
+                                    
+                                    <!-- Rating -->
+                                    <div class="flex items-center mt-1">
+                                        <div class="flex text-yellow-400 mr-2">
+                                            {% for i in range(5) %}
+                                                {% if i < provider.average_rating|int %}
+                                                    <i class="fas fa-star text-sm"></i>
+                                                {% else %}
+                                                    <i class="far fa-star text-sm"></i>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </div>
+                                        <span class="text-sm text-gray-600">
+                                            {{ "%.1f"|format(provider.average_rating) }} 
+                                            {% if provider.review_count %}
+                                                ({{ provider.review_count }} review{% if provider.review_count != 1 %}s{% endif %})
+                                            {% else %}
+                                                (No reviews yet)
+                                            {% endif %}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Status Badge -->
+                            <div class="flex flex-col items-end">
+                                <span class="px-2 py-1 rounded-full text-xs font-medium 
+                                    {% if provider.availability_status == 'available' %}bg-green-100 text-green-800
+                                    {% elif provider.availability_status == 'busy' %}bg-yellow-100 text-yellow-800
+                                    {% else %}bg-red-100 text-red-800{% endif %}">
+                                    {{ provider.availability_status|title }}
+                                </span>
+                                {% if provider.hourly_rate %}
+                                <span class="text-lg font-bold text-gray-900 mt-2">
+                                    {{ provider.hourly_rate|inr }}/hr
+                                </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Provider Details -->
+                    <div class="p-6">
+                        <!-- Description -->
+                        <p class="text-gray-600 text-sm mb-4 line-clamp-2">
+                            {{ provider.description or "No description provided." }}
+                        </p>
+
+                        <!-- Service Area & Experience -->
+                        <div class="grid grid-cols-2 gap-4 text-sm mb-4">
+                            <div class="flex items-center text-gray-600">
+                                <i class="fas fa-map-marker-alt mr-2 text-gray-400"></i>
+                                {{ provider.service_area or "Not specified" }}
+                            </div>
+                            <div class="flex items-center text-gray-600">
+                                <i class="fas fa-briefcase mr-2 text-gray-400"></i>
+                                {{ provider.experience_years or "0" }} years experience
+                            </div>
+                        </div>
+
+                        <!-- Services Offered -->
+                        <div class="mb-4">
+                            <h4 class="text-sm font-medium text-gray-700 mb-2">Services Offered:</h4>
+                            <div class="flex flex-wrap gap-2">
+                                {% for service in provider.services %}
+                                <span class="bg-blue-50 text-blue-700 px-2 py-1 rounded text-xs">
+                                    {{ service.service_name }} · {{ service.base_price|inr }}
+                                </span>
+                                {% endfor %}
+                                {% if not provider.services %}
+                                <span class="text-gray-500 text-xs">No specific services listed</span>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="flex space-x-3">
+                            <a href="{{ url_for('user.provider_detail', provider_id=provider.id) }}" 
+                               class="flex-1 bg-gray-900 text-white py-2 px-4 rounded-lg text-center hover:bg-gray-800 transition duration-200 font-medium text-sm">
+                                View Profile
+                            </a>
+                            <a href="{{ url_for('user.book_service', provider_id=provider.id) }}" 
+                               class="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg text-center hover:bg-blue-700 transition duration-200 font-medium text-sm">
+                                Book Now
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <!-- No Results State -->
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-12 text-center">
+                <div class="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <i class="fas fa-search text-gray-400 text-3xl"></i>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-900 mb-2">No providers found</h3>
+                <p class="text-gray-600 mb-6 max-w-md mx-auto">
+                    We couldn't find any providers matching your criteria. Try adjusting your filters or search in a different area.
+                </p>
+                <div class="space-x-4">
+                    <a href="{{ url_for('user.search') }}" 
+                       class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition duration-200 font-medium">
+                        Clear Filters
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Add search functionality enhancements
+document.addEventListener('DOMContentLoaded', function() {
+    // Filter toggle for mobile
+    const filterToggle = document.createElement('button');
+    filterToggle.className = 'lg:hidden bg-blue-600 text-white px-4 py-2 rounded-lg mb-4 w-full';
+    filterToggle.innerHTML = '<i class="fas fa-filter mr-2"></i> Show Filters';
+    
+    const filtersSidebar = document.querySelector('.lg\\:col-span-1');
+    if (filtersSidebar) {
+        filtersSidebar.parentNode.insertBefore(filterToggle, filtersSidebar);
+        filtersSidebar.classList.add('hidden', 'lg:block');
+        
+        filterToggle.addEventListener('click', function() {
+            filtersSidebar.classList.toggle('hidden');
+            this.innerHTML = filtersSidebar.classList.contains('hidden') ? 
+                '<i class="fas fa-filter mr-2"></i> Show Filters' : 
+                '<i class="fas fa-times mr-2"></i> Hide Filters';
+        });
+    }
+
+    // Add smooth animations to provider cards
+    const providerCards = document.querySelectorAll('.service-card');
+    providerCards.forEach((card, index) => {
+        card.style.animationDelay = `${index * 0.1}s`;
+        card.classList.add('fade-in');
+    });
+});
+</script>
+{% endblock %}

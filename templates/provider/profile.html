@@ -1,0 +1,388 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Profile - Servisto{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header -->
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900 mb-2">Provider Profile</h1>
+        <p class="text-gray-600">Update your business information and service details</p>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Profile Form -->
+        <div class="lg:col-span-2">
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                <form method="POST" class="space-y-6">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <!-- Business Information -->
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Business Information</h3>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- Business Name -->
+                            <div class="md:col-span-2">
+                                <label for="business_name" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Business Name *
+                                </label>
+                                <input type="text" id="business_name" name="business_name" required
+                                       value="{{ provider.business_name }}"
+                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
+                                       placeholder="Your business name">
+                            </div>
+
+                            <!-- Service Type -->
+                            <div>
+                                <label for="service_type" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Primary Service Type *
+                                </label>
+                                <select id="service_type" name="service_type" required
+                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200">
+                                    <option value="">Select service type</option>
+                                    <option value="plumbing" {% if provider.service_type == 'plumbing' %}selected{% endif %}>Plumbing</option>
+                                    <option value="cleaning" {% if provider.service_type == 'cleaning' %}selected{% endif %}>Cleaning</option>
+                                    <option value="painting" {% if provider.service_type == 'painting' %}selected{% endif %}>Painting</option>
+                                    <option value="electrical" {% if provider.service_type == 'electrical' %}selected{% endif %}>Electrical</option>
+                                    <option value="carpentry" {% if provider.service_type == 'carpentry' %}selected{% endif %}>Carpentry</option>
+                                    <option value="gardening" {% if provider.service_type == 'gardening' %}selected{% endif %}>Gardening</option>
+                                    <option value="moving" {% if provider.service_type == 'moving' %}selected{% endif %}>Moving</option>
+                                    <option value="repair" {% if provider.service_type == 'repair' %}selected{% endif %}>General Repair</option>
+                                </select>
+                            </div>
+
+                            <!-- Experience -->
+                            <div>
+                                <label for="experience_years" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Years of Experience
+                                </label>
+                                <input type="number" id="experience_years" name="experience_years"
+                                       value="{{ provider.experience_years or '' }}"
+                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
+                                       placeholder="5" min="0" max="50">
+                            </div>
+
+                            <!-- License Number -->
+                            <div>
+                                <label for="license_number" class="block text-sm font-medium text-gray-700 mb-2">
+                                    License Number
+                                </label>
+                                <input type="text" id="license_number" name="license_number"
+                                       value="{{ provider.license_number or '' }}"
+                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
+                                       placeholder="e.g., LIC123456">
+                            </div>
+
+                            <!-- Hourly Rate -->
+                            <div>
+                                <label for="hourly_rate" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Hourly Rate (₹)
+                                </label>
+                                <input type="number" id="hourly_rate" name="hourly_rate" step="0.01"
+                                       value="{{ provider.hourly_rate or '' }}"
+                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
+                                       placeholder="50.00" min="0">
+                            </div>
+
+                            <!-- Availability -->
+                            <div>
+                                <label for="availability_status" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Availability Status *
+                                </label>
+                                <select id="availability_status" name="availability_status" required
+                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200">
+                                    <option value="available" {% if provider.availability_status == 'available' %}selected{% endif %}>Available</option>
+                                    <option value="busy" {% if provider.availability_status == 'busy' %}selected{% endif %}>Busy</option>
+                                    <option value="unavailable" {% if provider.availability_status == 'unavailable' %}selected{% endif %}>Unavailable</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Service Area -->
+                    <div>
+                        <label for="service_area" class="block text-sm font-medium text-gray-700 mb-2">
+                            Service Area
+                        </label>
+                        <input type="text" id="service_area" name="service_area"
+                               value="{{ provider.service_area or '' }}"
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
+                               placeholder="e.g., New York City, Brooklyn, Queens">
+                        <p class="text-xs text-gray-500 mt-1">List the areas where you provide services</p>
+                    </div>
+
+                    <!-- Business Description -->
+                    <div>
+                        <label for="description" class="block text-sm font-medium text-gray-700 mb-2">
+                            Business Description
+                        </label>
+                        <textarea id="description" name="description" rows="4"
+                                  class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 resize-none"
+                                  placeholder="Describe your business, expertise, and what makes you unique...">{{ provider.description or '' }}</textarea>
+                        <p class="text-xs text-gray-500 mt-1">This will be displayed on your public profile</p>
+                    </div>
+
+                    <!-- Contact Information -->
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Contact Information</h3>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- Phone -->
+                            <div>
+                                <label for="phone" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Phone Number
+                                </label>
+                                <input type="tel" id="phone" name="phone"
+                                       value="{{ current_user.phone or '' }}"
+                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
+                                       placeholder="+1 (555) 123-4567">
+                            </div>
+
+                            <!-- Address -->
+                            <div class="md:col-span-2">
+                                <label for="address" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Business Address
+                                </label>
+                                <textarea id="address" name="address" rows="3"
+                                          class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 resize-none"
+                                          placeholder="Your business address for service coordination">{{ current_user.address or '' }}</textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="flex justify-end space-x-4 pt-6 border-t border-gray-200">
+                        <a href="{{ url_for('provider.dashboard') }}" 
+                           class="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition duration-200 font-medium">
+                            Cancel
+                        </a>
+                        <button type="submit" 
+                                class="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 focus:ring-4 focus:ring-blue-200 transition duration-200 font-semibold">
+                            Save Changes
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Profile Preview & Tips -->
+        <div class="lg:col-span-1 space-y-6">
+            <!-- Profile Preview -->
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Profile Preview</h3>
+                
+                <div class="text-center">
+                    <div class="w-20 h-20 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center mx-auto mb-4">
+                        <i class="fas {{ getServiceIcon(provider.service_type) }} text-white text-2xl"></i>
+                    </div>
+                    <h4 class="font-semibold text-gray-900">{{ provider.business_name }}</h4>
+                    <p class="text-blue-600 text-sm mb-3">{{ provider.service_type|title }}</p>
+                    
+                    <div class="flex items-center justify-center mb-4">
+                        <div class="flex text-yellow-400 mr-2">
+                            {% for i in range(5) %}
+                                {% if i < provider.average_rating|int %}
+                                    <i class="fas fa-star text-sm"></i>
+                                {% else %}
+                                    <i class="far fa-star text-sm"></i>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                        <span class="text-sm text-gray-600">
+                            {{ "%.1f"|format(provider.average_rating) }} 
+                            ({{ provider.reviews|length }} reviews)
+                        </span>
+                    </div>
+                    
+                    <div class="space-y-2 text-sm text-gray-600 text-left">
+                        <div class="flex justify-between">
+                            <span>Experience:</span>
+                            <span class="font-medium">{{ provider.experience_years or '0' }} years</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Hourly Rate:</span>
+                            <span class="font-medium">
+                                {% if provider.hourly_rate %}
+                                {{ provider.hourly_rate|inr }}/hr
+                                {% else %}
+                                Not set
+                                {% endif %}
+                            </span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Status:</span>
+                            <span class="font-medium capitalize">{{ provider.availability_status }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Profile Tips -->
+            <div class="bg-blue-50 border border-blue-200 rounded-2xl p-6">
+                <h3 class="text-lg font-semibold text-blue-900 mb-3">Profile Tips</h3>
+                <div class="space-y-3">
+                    <div class="flex items-start">
+                        <i class="fas fa-check-circle text-blue-500 mt-1 mr-3"></i>
+                        <div class="text-sm text-blue-800">
+                            <strong>Complete your profile</strong> to get 3x more bookings
+                        </div>
+                    </div>
+                    <div class="flex items-start">
+                        <i class="fas fa-check-circle text-blue-500 mt-1 mr-3"></i>
+                        <div class="text-sm text-blue-800">
+                            <strong>Add a detailed description</strong> to build trust with customers
+                        </div>
+                    </div>
+                    <div class="flex items-start">
+                        <i class="fas fa-check-circle text-blue-500 mt-1 mr-3"></i>
+                        <div class="text-sm text-blue-800">
+                            <strong>Set your availability</strong> to receive relevant booking requests
+                        </div>
+                    </div>
+                    <div class="flex items-start">
+                        <i class="fas fa-check-circle text-blue-500 mt-1 mr-3"></i>
+                        <div class="text-sm text-blue-800">
+                            <strong>Add your license number</strong> to appear more professional
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Stats -->
+            <div class="bg-gray-50 rounded-2xl p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Profile Strength</h3>
+                
+                {% set completed_fields = [
+                    provider.business_name,
+                    provider.service_type,
+                    provider.description,
+                    provider.experience_years,
+                    provider.license_number,
+                    provider.hourly_rate,
+                    provider.service_area,
+                    current_user.phone,
+                    current_user.address
+                ] %}
+                
+                {% set filled_count = completed_fields|select|list|length %}
+                {% set completion_percentage = (filled_count / 9 * 100)|round|int %}
+                
+                <div class="mb-4">
+                    <div class="flex justify-between text-sm text-gray-600 mb-2">
+                        <span>Profile Completion</span>
+                        <span>{{ completion_percentage }}%</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-2">
+                        <div class="bg-blue-600 h-2 rounded-full transition-all duration-500" 
+                             style="width: {{ completion_percentage }}%"></div>
+                    </div>
+                </div>
+                
+                <div class="space-y-2 text-sm text-gray-600">
+                    <div class="flex justify-between">
+                        <span>Completed Fields</span>
+                        <span class="font-medium">{{ filled_count }}/9</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>Total Bookings</span>
+                        <span class="font-medium">{{ provider.bookings|length }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>Customer Reviews</span>
+                        <span class="font-medium">{{ provider.reviews|length }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Real-time profile strength calculation
+    const formFields = document.querySelectorAll('input, textarea, select');
+    
+    function updateProfileStrength() {
+        let filledCount = 0;
+        const totalFields = 9; // Number of fields we're tracking
+        
+        formFields.forEach(field => {
+            if (field.value && field.value.trim() !== '') {
+                filledCount++;
+            }
+        });
+        
+        const percentage = Math.round((filledCount / totalFields) * 100);
+        
+        // Update progress bar and text
+        const progressBar = document.querySelector('.bg-blue-600');
+        const percentageText = document.querySelector('.text-sm span:last-child');
+        
+        if (progressBar && percentageText) {
+            progressBar.style.width = percentage + '%';
+            percentageText.textContent = percentage + '%';
+            
+            // Update completed fields count
+            const completedFields = document.querySelector('.font-medium');
+            if (completedFields) {
+                completedFields.textContent = filledCount + '/9';
+            }
+        }
+    }
+    
+    // Add event listeners to all form fields
+    formFields.forEach(field => {
+        field.addEventListener('input', updateProfileStrength);
+        field.addEventListener('change', updateProfileStrength);
+    });
+    
+    // Initialize profile strength
+    updateProfileStrength();
+    
+    // Form validation
+    const form = document.querySelector('form');
+    form.addEventListener('submit', function(e) {
+        const businessName = document.getElementById('business_name');
+        const serviceType = document.getElementById('service_type');
+        
+        if (!businessName.value.trim()) {
+            e.preventDefault();
+            showFieldError(businessName, 'Business name is required');
+            businessName.focus();
+            return;
+        }
+        
+        if (!serviceType.value) {
+            e.preventDefault();
+            showFieldError(serviceType, 'Service type is required');
+            serviceType.focus();
+            return;
+        }
+        
+        // Show loading state
+        const submitButton = this.querySelector('button[type="submit"]');
+        const originalText = submitButton.innerHTML;
+        submitButton.innerHTML = '<div class="loading-spinner"></div> Saving...';
+        submitButton.disabled = true;
+    });
+    
+    function showFieldError(field, message) {
+        // Remove existing error
+        const existingError = field.parentNode.querySelector('.error-message');
+        if (existingError) {
+            existingError.remove();
+        }
+        
+        field.classList.add('border-red-500');
+        
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'error-message text-red-500 text-sm mt-1';
+        errorDiv.innerHTML = `<i class="fas fa-exclamation-circle mr-1"></i> ${message}`;
+        
+        field.parentNode.appendChild(errorDiv);
+    }
+});
+</script>
+{% endblock %}

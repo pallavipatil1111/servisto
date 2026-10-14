@@ -1,0 +1,444 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Bookings - Servisto{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header -->
+    <div class="mb-8">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900 mb-2">Manage Bookings</h1>
+                <p class="text-gray-600">View and manage your service requests from customers</p>
+            </div>
+            <div class="mt-4 sm:mt-0 flex items-center space-x-4">
+                <!-- Booking Stats -->
+                <div class="hidden md:flex items-center space-x-6 text-sm">
+                    <div class="flex items-center">
+                        <div class="w-3 h-3 bg-yellow-400 rounded-full mr-2"></div>
+                        <span class="text-gray-600">{{ all_bookings|selectattr('status', 'equalto', 'pending')|list|length }} Pending</span>
+                    </div>
+                    <div class="flex items-center">
+                        <div class="w-3 h-3 bg-blue-400 rounded-full mr-2"></div>
+                        <span class="text-gray-600">{{ all_bookings|selectattr('status', 'equalto', 'confirmed')|list|length }} Confirmed</span>
+                    </div>
+                    <div class="flex items-center">
+                        <div class="w-3 h-3 bg-green-400 rounded-full mr-2"></div>
+                        <span class="text-gray-600">{{ all_bookings|selectattr('status', 'equalto', 'completed')|list|length }} Completed</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+            <div class="flex items-center space-x-4 mb-4 sm:mb-0">
+                <span class="text-sm font-medium text-gray-700">Filter by status:</span>
+                <div class="flex flex-wrap gap-2">
+                    <a href="{{ url_for('provider.bookings', sort=sort) }}" 
+                       class="px-3 py-1 rounded-full text-sm font-medium transition duration-200 {% if status_filter == 'all' %}bg-blue-100 text-blue-800{% else %}bg-gray-100 text-gray-600 hover:bg-gray-200{% endif %}">
+                        All ({{ all_bookings|length }})
+                    </a>
+                    <a href="{{ url_for('provider.bookings', status='pending', sort=sort) }}" 
+                       class="px-3 py-1 rounded-full text-sm font-medium transition duration-200 {% if status_filter == 'pending' %}bg-yellow-100 text-yellow-800{% else %}bg-gray-100 text-gray-600 hover:bg-gray-200{% endif %}">
+                        Pending ({{ all_bookings|selectattr('status', 'equalto', 'pending')|list|length }})
+                    </a>
+                    <a href="{{ url_for('provider.bookings', status='confirmed', sort=sort) }}" 
+                       class="px-3 py-1 rounded-full text-sm font-medium transition duration-200 {% if status_filter == 'confirmed' %}bg-blue-100 text-blue-800{% else %}bg-gray-100 text-gray-600 hover:bg-gray-200{% endif %}">
+                        Confirmed ({{ all_bookings|selectattr('status', 'equalto', 'confirmed')|list|length }})
+                    </a>
+                    <a href="{{ url_for('provider.bookings', status='completed', sort=sort) }}" 
+                       class="px-3 py-1 rounded-full text-sm font-medium transition duration-200 {% if status_filter == 'completed' %}bg-green-100 text-green-800{% else %}bg-gray-100 text-gray-600 hover:bg-gray-200{% endif %}">
+                        Completed ({{ all_bookings|selectattr('status', 'equalto', 'completed')|list|length }})
+                    </a>
+                    <a href="{{ url_for('provider.bookings', status='cancelled', sort=sort) }}" 
+                       class="px-3 py-1 rounded-full text-sm font-medium transition duration-200 {% if status_filter == 'cancelled' %}bg-red-100 text-red-800{% else %}bg-gray-100 text-gray-600 hover:bg-gray-200{% endif %}">
+                        Cancelled ({{ all_bookings|selectattr('status', 'equalto', 'cancelled')|list|length }})
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Sort Options -->
+            <div class="flex items-center space-x-4">
+                <form method="GET" id="sort-form">
+                    {% if status_filter != 'all' %}<input type="hidden" name="status" value="{{ status_filter }}">{% endif %}
+                    <select name="sort" id="sort" aria-label="Sort bookings" onchange="this.form.submit()"
+                            class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm">
+                        <option value="date" {% if sort == 'date' %}selected{% endif %}>Sort by: Date</option>
+                        <option value="customer" {% if sort == 'customer' %}selected{% endif %}>Sort by: Customer</option>
+                        <option value="service" {% if sort == 'service' %}selected{% endif %}>Sort by: Service</option>
+                    </select>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bookings Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+        {% for booking in bookings %}
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition duration-200">
+            <!-- Booking Header -->
+            <div class="p-6 border-b border-gray-100">
+                <div class="flex items-start justify-between mb-4">
+                    <div class="flex items-center">
+                        <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mr-4">
+                            <i class="fas fa-user text-blue-600"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-gray-900">{{ booking.first_name }} {{ booking.last_name }}</h3>
+                            <p class="text-sm text-gray-600">{{ booking.service_name }}</p>
+                        </div>
+                    </div>
+                    <span class="px-3 py-1 rounded-full text-xs font-medium 
+                        {% if booking.status == 'completed' %}bg-green-100 text-green-800
+                        {% elif booking.status == 'confirmed' %}bg-blue-100 text-blue-800
+                        {% elif booking.status == 'pending' %}bg-yellow-100 text-yellow-800
+                        {% else %}bg-red-100 text-red-800{% endif %}">
+                        {{ booking.status|title }}
+                    </span>
+                </div>
+
+                <!-- Service Details -->
+                <div class="space-y-2 text-sm text-gray-600">
+                    <div class="flex justify-between">
+                        <span>Date & Time:</span>
+                        <span class="font-medium text-gray-900">{{ booking.service_date }} at {{ booking.service_time|time12 }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>Duration:</span>
+                        <span class="font-medium text-gray-900">{{ "%g"|format(booking.duration_hours) }} hour{% if booking.duration_hours != 1 %}s{% endif %}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>Amount:</span>
+                        <span class="font-medium text-gray-900">{{ booking.total_amount|inr }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Booking Details -->
+            <div class="p-6">
+                <!-- Address -->
+                <div class="mb-4">
+                    <h4 class="text-sm font-medium text-gray-700 mb-2">Service Address</h4>
+                    <p class="text-sm text-gray-600">{{ booking.address }}</p>
+                </div>
+
+                <!-- Problem Description -->
+                {% if booking.problem_description %}
+                <div class="mb-4">
+                    <h4 class="text-sm font-medium text-gray-700 mb-2">Service Details</h4>
+                    <p class="text-sm text-gray-600">{{ booking.problem_description }}</p>
+                </div>
+                {% endif %}
+
+                <!-- Contact Info -->
+                <div class="mb-6 p-4 bg-gray-50 rounded-lg">
+                    <h4 class="text-sm font-medium text-gray-700 mb-2">Contact Information</h4>
+                    <div class="space-y-1 text-sm text-gray-600">
+                        <div class="flex items-center">
+                            <i class="fas fa-envelope mr-2 text-gray-400"></i>
+                            <span>{{ booking.email }}</span>
+                        </div>
+                        {% if booking.phone %}
+                        <div class="flex items-center">
+                            <i class="fas fa-phone mr-2 text-gray-400"></i>
+                            <span>{{ booking.phone }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex space-x-3">
+                    {% if booking.status == 'pending' %}
+                    <button onclick="updateBookingStatus({{ booking.id }}, 'confirmed')"
+                            class="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition duration-200 font-medium text-sm">
+                        Confirm
+                    </button>
+                    <button onclick="updateBookingStatus({{ booking.id }}, 'cancelled')"
+                            class="flex-1 border border-gray-300 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-50 transition duration-200 font-medium text-sm">
+                        Decline
+                    </button>
+                    {% elif booking.status == 'confirmed' %}
+                    <button onclick="updateBookingStatus({{ booking.id }}, 'completed')"
+                            class="flex-1 bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition duration-200 font-medium text-sm">
+                        Mark Complete
+                    </button>
+                    <button onclick="updateBookingStatus({{ booking.id }}, 'cancelled')"
+                            class="flex-1 border border-gray-300 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-50 transition duration-200 font-medium text-sm">
+                        Cancel
+                    </button>
+                    {% elif booking.status == 'completed' %}
+                    <button class="flex-1 bg-gray-100 text-gray-600 py-2 px-4 rounded-lg font-medium text-sm cursor-not-allowed">
+                        Completed
+                    </button>
+                    {% if not booking.review %}
+                    <button class="flex-1 border border-gray-300 text-gray-700 py-2 px-4 rounded-lg font-medium text-sm cursor-not-allowed"
+                            title="Customer can leave review">
+                        Awaiting Review
+                    </button>
+                    {% else %}
+                    <button class="flex-1 border border-green-300 text-green-700 py-2 px-4 rounded-lg font-medium text-sm cursor-not-allowed">
+                        Reviewed
+                    </button>
+                    {% endif %}
+                    {% else %}
+                    <button class="flex-1 bg-gray-100 text-gray-600 py-2 px-4 rounded-lg font-medium text-sm cursor-not-allowed">
+                        Cancelled
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Booking Footer -->
+            <div class="px-6 py-4 bg-gray-50 border-t border-gray-100">
+                <div class="flex justify-between items-center text-xs text-gray-500">
+                    <span>Booked on {{ booking.created_at_formatted }}</span>
+                    <span>ID: #{{ booking.id }}</span>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <!-- Empty State -->
+        <div class="col-span-full">
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-12 text-center">
+                <div class="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <i class="fas fa-calendar-times text-gray-400 text-3xl"></i>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-900 mb-2">
+                    {% if status_filter != 'all' %}
+                    No {{ status_filter }} bookings
+                    {% else %}
+                    No bookings yet
+                    {% endif %}
+                </h3>
+                <p class="text-gray-600 mb-6 max-w-md mx-auto">
+                    {% if status_filter != 'all' %}
+                    You don't have any {{ status_filter }} bookings at the moment.
+                    {% else %}
+                    Your bookings will appear here when customers book your services.
+                    {% endif %}
+                </p>
+                {% if status_filter != 'all' %}
+                <a href="{{ url_for('provider.bookings', sort=sort) }}" 
+                   class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition duration-200 font-medium">
+                    View All Bookings
+                </a>
+                {% else %}
+                <a href="{{ url_for('provider.profile') }}" 
+                   class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition duration-200 font-medium">
+                    Optimize Your Profile
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+</div>
+
+<!-- Status Update Modal -->
+<div id="status-modal" class="modal hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="modal-backdrop relative top-20 mx-auto p-5 border w-full max-w-md shadow-lg rounded-2xl bg-white">
+        <div class="modal-content text-center">
+            <!-- Modal Header -->
+            <div class="mb-6">
+                <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-info-circle text-blue-600 text-2xl"></i>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-900 mb-2" id="status-modal-title">Update Booking Status</h3>
+                <p class="text-gray-600" id="status-modal-message">Are you sure you want to update this booking status?</p>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex justify-center space-x-4">
+                <button onclick="closeModal('status-modal')" 
+                        class="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition duration-200 font-medium">
+                    Cancel
+                </button>
+                <button id="confirm-status-update" 
+                        class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-200 font-medium">
+                    Confirm
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let currentBookingId = null;
+let currentNewStatus = null;
+
+function updateBookingStatus(bookingId, newStatus) {
+    currentBookingId = bookingId;
+    currentNewStatus = newStatus;
+    
+    const statusMessages = {
+        'confirmed': 'Confirm this booking? The customer will be notified.',
+        'completed': 'Mark this service as completed?',
+        'cancelled': 'Cancel this booking? The customer will be notified.'
+    };
+    
+    const statusTitles = {
+        'confirmed': 'Confirm Booking',
+        'completed': 'Complete Service',
+        'cancelled': 'Cancel Booking'
+    };
+    
+    // Update modal content
+    document.getElementById('status-modal-title').textContent = statusTitles[newStatus];
+    document.getElementById('status-modal-message').textContent = statusMessages[newStatus];
+    
+    // Open modal
+    openModal('status-modal');
+}
+
+// Confirm status update
+document.getElementById('confirm-status-update').addEventListener('click', function() {
+    if (!currentBookingId || !currentNewStatus) return;
+    
+    const button = this;
+    const originalText = button.innerHTML;
+    
+    // Show loading state
+    button.innerHTML = '<div class="loading-spinner"></div> Updating...';
+    button.disabled = true;
+    
+    fetch(`/provider/booking/${currentBookingId}/update_status`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `status=${currentNewStatus}`
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Close modal and show success message
+            closeModal('status-modal');
+            showFlashMessage(data.message, 'success');
+            
+            // Reload page after a short delay to show the update
+            setTimeout(() => {
+                window.location.reload();
+            }, 1500);
+        } else {
+            showFlashMessage(data.message, 'error');
+            button.innerHTML = originalText;
+            button.disabled = false;
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showFlashMessage('An error occurred. Please try again.', 'error');
+        button.innerHTML = originalText;
+        button.disabled = false;
+    });
+});
+
+function showFlashMessage(message, type) {
+    // Create flash message element
+    const flashDiv = document.createElement('div');
+    flashDiv.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 ${
+        type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+    }`;
+    flashDiv.innerHTML = `
+        <div class="flex items-center">
+            <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'} mr-2"></i>
+            <span>${message}</span>
+        </div>
+    `;
+    document.body.appendChild(flashDiv);
+    
+    // Remove after 3 seconds
+    setTimeout(() => {
+        flashDiv.remove();
+    }, 3000);
+}
+
+// Modal functions
+function openModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+function closeModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        document.body.style.overflow = 'auto';
+    }
+}
+
+// Close modal when clicking backdrop
+document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('modal-backdrop')) {
+        const modal = e.target.closest('.modal');
+        if (modal) {
+            closeModal(modal.id);
+        }
+    }
+});
+
+// Add keyboard shortcut to close modal with Escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeModal('status-modal');
+    }
+});
+
+// Add animations to booking cards
+document.addEventListener('DOMContentLoaded', function() {
+    const bookingCards = document.querySelectorAll('.bg-white.rounded-2xl');
+    bookingCards.forEach((card, index) => {
+        card.style.animationDelay = `${index * 0.1}s`;
+        card.classList.add('fade-in');
+    });
+});
+</script>
+
+<style>
+.loading-spinner {
+    border: 2px solid #f3f4f6;
+    border-top: 2px solid #ffffff;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    animation: spin 1s linear infinite;
+    display: inline-block;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.fade-in {
+    animation: fadeIn 0.6s ease-out forwards;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.modal {
+    transition: all 0.3s ease;
+}
+</style>
+{% endblock %}

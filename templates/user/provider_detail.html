@@ -1,0 +1,327 @@
+{% extends "base.html" %}
+
+{% block title %}{{ provider.business_name }} - Servisto{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Back Button -->
+    <div class="mb-6">
+        <a href="{{ url_for('user.search') }}" class="inline-flex items-center text-blue-600 hover:text-blue-700 font-medium">
+            <i class="fas fa-arrow-left mr-2"></i>
+            Back to Search
+        </a>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Main Content -->
+        <div class="lg:col-span-2">
+            <!-- Provider Header -->
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
+                <div class="flex flex-col sm:flex-row sm:items-start sm:space-x-6">
+                    <!-- Provider Avatar -->
+                    <div class="w-20 h-20 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center mb-4 sm:mb-0">
+                        <i class="fas {{ getServiceIcon(provider.service_type) }} text-white text-2xl"></i>
+                    </div>
+                    
+                    <!-- Provider Info -->
+                    <div class="flex-1">
+                        <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between">
+                            <div>
+                                <h1 class="text-2xl font-bold text-gray-900 mb-2">{{ provider.business_name }}</h1>
+                                <p class="text-blue-600 font-semibold text-lg mb-3">{{ provider.service_type|title }} Services</p>
+                                
+                                <!-- Rating and Reviews -->
+                                <div class="flex items-center mb-4">
+                                    <div class="flex items-center bg-blue-50 px-3 py-1 rounded-full">
+                                        <div class="flex text-yellow-400 mr-2">
+                                            {% for i in range(5) %}
+                                                {% if i < provider.average_rating|int %}
+                                                    <i class="fas fa-star text-sm"></i>
+                                                {% else %}
+                                                    <i class="far fa-star text-sm"></i>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </div>
+                                        <span class="text-sm font-semibold text-blue-700">
+                                            {{ "%.1f"|format(provider.average_rating) }}
+                                        </span>
+                                        <span class="text-sm text-blue-600 ml-1">
+                                            ({{ reviews|length }} review{% if reviews|length != 1 %}s{% endif %})
+                                        </span>
+                                    </div>
+                                    
+                                    <!-- Status Badge -->
+                                    <span class="ml-4 px-3 py-1 rounded-full text-sm font-medium 
+                                        {% if provider.availability_status == 'available' %}bg-green-100 text-green-800
+                                        {% elif provider.availability_status == 'busy' %}bg-yellow-100 text-yellow-800
+                                        {% else %}bg-red-100 text-red-800{% endif %}">
+                                        {{ provider.availability_status|title }}
+                                    </span>
+                                </div>
+                            </div>
+                            
+                            <!-- Action Buttons -->
+                            <div class="flex space-x-3 mt-4 sm:mt-0">
+                                <a href="{{ url_for('user.book_service', provider_id=provider.id) }}" 
+                                   class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition duration-200 font-semibold">
+                                    Book Service
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Quick Stats -->
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-gray-100">
+                            <div class="text-center">
+                                <div class="text-lg font-bold text-gray-900">{{ provider.experience_years or "0" }}+</div>
+                                <div class="text-sm text-gray-600">Years Experience</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-lg font-bold text-gray-900">{{ completed_bookings|default(0) }}</div>
+                                <div class="text-sm text-gray-600">Jobs Completed</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-lg font-bold text-gray-900">{{ provider.service_area or "Local" }}</div>
+                                <div class="text-sm text-gray-600">Service Area</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-lg font-bold text-gray-900">
+                                    {% if provider.hourly_rate %}
+                                    {{ provider.hourly_rate|inr }}/hr
+                                    {% else %}
+                                    Contact
+                                    {% endif %}
+                                </div>
+                                <div class="text-sm text-gray-600">Hourly Rate</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- About Section -->
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
+                <h2 class="text-xl font-semibold text-gray-900 mb-4">About</h2>
+                <p class="text-gray-600 leading-relaxed">
+                    {{ provider.description or "No description provided. This provider hasn't added an about section yet." }}
+                </p>
+                
+                {% if provider.license_number %}
+                <div class="mt-4 p-4 bg-green-50 rounded-lg border border-green-200">
+                    <div class="flex items-center">
+                        <i class="fas fa-shield-alt text-green-600 mr-3"></i>
+                        <div>
+                            <div class="font-semibold text-green-800">Licence number on file</div>
+                            <div class="text-green-700 text-sm">License #: {{ provider.license_number }}</div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Services Offered -->
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
+                <h2 class="text-xl font-semibold text-gray-900 mb-4">Services Offered</h2>
+                {% if services %}
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {% for service in services %}
+                    <div class="border border-gray-200 rounded-lg p-4 hover:border-blue-300 transition duration-200">
+                        <div class="flex justify-between items-start mb-2">
+                            <h3 class="font-semibold text-gray-900">{{ service.service_name }}</h3>
+                            <span class="bg-blue-100 text-blue-700 px-2 py-1 rounded text-sm font-semibold">
+                                {{ service.base_price|inr }}
+                            </span>
+                        </div>
+                        {% if service.description %}
+                        <p class="text-gray-600 text-sm mb-3">{{ service.description }}</p>
+                        {% endif %}
+                        <div class="flex justify-between items-center text-sm text-gray-500">
+                            <span><i class="fas fa-clock mr-1"></i>About {{ "%g"|format(service.duration_hours) }} hour{{ "" if service.duration_hours == 1 else "s" }}</span>
+                            <a href="{{ url_for('user.book_service', provider_id=provider.id, service_id=service.id) }}"
+                               class="text-blue-600 hover:text-blue-700 font-medium text-sm">
+                                Book this <i class="fas fa-arrow-right ml-1"></i>
+                            </a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-8 text-gray-500">
+                    <i class="fas fa-tools text-3xl mb-3 text-gray-300"></i>
+                    <p>No specific services listed yet.</p>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Reviews Section -->
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                <h2 class="text-xl font-semibold text-gray-900 mb-4">Customer Reviews</h2>
+                
+                {% if reviews %}
+                <!-- Reviews Summary -->
+                <div class="bg-gray-50 rounded-lg p-6 mb-6">
+                    <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+                        <div class="text-center md:text-left mb-4 md:mb-0">
+                            <div class="text-4xl font-bold text-gray-900 mb-1">{{ "%.1f"|format(provider.average_rating) }}</div>
+                            <div class="flex justify-center md:justify-start text-yellow-400 mb-2">
+                                {% for i in range(5) %}
+                                    {% if i < provider.average_rating|int %}
+                                        <i class="fas fa-star"></i>
+                                    {% else %}
+                                        <i class="far fa-star"></i>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                            <div class="text-gray-600">Based on {{ reviews|length }} review{{ "" if reviews|length == 1 else "s" }}</div>
+                        </div>
+                        
+                        <!-- Rating Distribution -->
+                        <div class="flex-1 max-w-md">
+                            {% for i in range(5, 0, -1) %}
+                            {% set count = reviews|selectattr('rating', 'equalto', i)|list|length %}
+                            {% set percentage = (count / reviews|length * 100) if reviews|length > 0 else 0 %}
+                            <div class="flex items-center mb-2">
+                                <span class="w-12 text-sm text-gray-600">{{ i }} star</span>
+                                <div class="flex-1 bg-gray-200 rounded-full h-2 mx-3">
+                                    <div class="bg-yellow-400 h-2 rounded-full" style="width: {{ percentage }}%"></div>
+                                </div>
+                                <span class="w-8 text-sm text-gray-600 text-right">{{ count }}</span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Reviews List -->
+                <div class="space-y-6">
+                    {% for review in reviews %}
+                    <div class="border-b border-gray-100 pb-6 last:border-0 last:pb-0">
+                        <div class="flex items-start justify-between mb-3">
+                            <div class="flex items-center">
+                                <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mr-3">
+                                    <span class="text-blue-600 font-semibold text-sm">
+                                        {{ review.first_name[0] }}{{ review.last_name[0] }}
+                                    </span>
+                                </div>
+                                <div>
+                                    <div class="font-semibold text-gray-900">
+                                        {{ review.first_name }} {{ review.last_name }}
+                                    </div>
+                                    <div class="flex items-center text-sm text-gray-500">
+                                        <div class="flex text-yellow-400 mr-2">
+                                            {% for i in range(5) %}
+                                                {% if i < review.rating %}
+                                                    <i class="fas fa-star text-xs"></i>
+                                                {% else %}
+                                                    <i class="far fa-star text-xs"></i>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </div>
+                                        <span>{{ review.created_at.strftime('%B %d, %Y') }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        {% if review.comment %}
+                        <p class="text-gray-600 leading-relaxed">{{ review.comment }}</p>
+                        {% else %}
+                        <p class="text-gray-500 italic">No comment provided.</p>
+                        {% endif %}
+                        {% if review.provider_response %}
+                        <div class="mt-3 ml-4 pl-4 border-l-4 border-blue-200 bg-blue-50 rounded-r-lg p-3">
+                            <div class="text-sm font-semibold text-blue-800 mb-1"><i class="fas fa-reply mr-1"></i>Reply from {{ provider.business_name }}</div>
+                            <p class="text-sm text-gray-700">{{ review.provider_response }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <!-- No Reviews State -->
+                <div class="text-center py-8">
+                    <i class="fas fa-comment-slash text-3xl text-gray-300 mb-3"></i>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-2">No Reviews Yet</h3>
+                    <p class="text-gray-600">This provider doesn't have any reviews yet. Customers can review a provider after a completed booking.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="lg:col-span-1">
+            <!-- Contact & Booking Card -->
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sticky top-24">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Ready to Book?</h3>
+                
+                <!-- Quick Info -->
+                <div class="space-y-3 mb-6">
+                    <div class="flex items-center text-gray-600">
+                        <i class="fas fa-clock text-gray-400 mr-3 w-5"></i>
+                        <span>{{ services|length }} service{{ "" if services|length == 1 else "s" }} on offer</span>
+                    </div>
+                    <div class="flex items-center text-gray-600">
+                        <i class="fas fa-calendar-check text-gray-400 mr-3 w-5"></i>
+                        <span>{{ "Taking new bookings" if provider.availability_status == "available" else "Not taking bookings right now" }}</span>
+                    </div>
+                    <div class="flex items-center text-gray-600">
+                        <i class="fas fa-map-marker-alt text-gray-400 mr-3 w-5"></i>
+                        <span>Serves {{ provider.service_area or "your area" }}</span>
+                    </div>
+                </div>
+
+                <!-- Booking CTA -->
+                <a href="{{ url_for('user.book_service', provider_id=provider.id) }}" 
+                   class="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition duration-200 font-semibold text-center block mb-4">
+                    Book This Provider
+                </a>
+
+                <!-- Contact Info -->
+                <div class="border-t border-gray-100 pt-4">
+                    <h4 class="font-semibold text-gray-900 mb-3">Contact Information</h4>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex items-center text-gray-600">
+                            <i class="fas fa-envelope text-gray-400 mr-3 w-4"></i>
+                            <span>{{ provider.email }}</span>
+                        </div>
+                        {% if provider.phone %}
+                        <div class="flex items-center text-gray-600">
+                            <i class="fas fa-phone text-gray-400 mr-3 w-4"></i>
+                            <span>{{ provider.phone }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Trust Badges -->
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mt-6">
+                <h4 class="font-semibold text-gray-900 mb-4">Why Book With Us</h4>
+                <div class="space-y-4">
+                    <div class="flex items-start">
+                        <i class="fas fa-shield-alt text-green-500 mt-1 mr-3"></i>
+                        <div>
+                            <div class="font-medium text-gray-900">Genuine reviews</div>
+                            <div class="text-sm text-gray-600">Only customers with a completed booking can leave a review</div>
+                        </div>
+                    </div>
+                    <div class="flex items-start">
+                        <i class="fas fa-indian-rupee-sign text-green-500 mt-1 mr-3"></i>
+                        <div>
+                            <div class="font-medium text-gray-900">No Upfront Payment</div>
+                            <div class="text-sm text-gray-600">Pay after service is completed</div>
+                        </div>
+                    </div>
+                    <div class="flex items-start">
+                        <i class="fas fa-medal text-green-500 mt-1 mr-3"></i>
+                        <div>
+                            <div class="font-medium text-gray-900">Free cancellation</div>
+                            <div class="text-sm text-gray-600">Cancel any time before the job is completed</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

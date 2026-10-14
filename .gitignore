@@ -1,0 +1,21 @@
+# Local data and secrets
+.env
+instance/
+*.db
+*.sqlite3
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.pytest_cache/
+
+# Node (only used to rebuild the Tailwind CSS)
+node_modules/
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

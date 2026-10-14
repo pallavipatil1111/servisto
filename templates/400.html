@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block title %}Request problem - Servisto{% endblock %}
+
+{% block content %}
+<div class="max-w-xl mx-auto px-4 py-24 text-center">
+    <div class="w-20 h-20 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-6">
+        <i class="fas fa-exclamation-triangle text-yellow-600 text-3xl"></i>
+    </div>
+    <h1 class="text-3xl font-bold text-gray-900 mb-3">Something was wrong with that request</h1>
+    <p class="text-gray-600 mb-8">{{ message or 'Please go back, reload the page and try again.' }}</p>
+    <a href="{{ url_for('index') }}" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 font-medium">
+        <i class="fas fa-home mr-2"></i>Back to home
+    </a>
+</div>
+{% endblock %}

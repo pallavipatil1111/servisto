@@ -1,0 +1,22 @@
+# One-click deploy on Render (free plan): New + > Blueprint > pick this repo.
+services:
+  - type: web
+    name: servisto
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn 'main:create_app()' --bind 0.0.0.0:$PORT --workers 2
+    healthCheckPath: /healthz
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.7
+      - key: SECRET_KEY
+        generateValue: true
+      - key: SEED_DEMO_DATA
+        value: "true"
+      - key: SECURE_COOKIES
+        value: "true"
+      # The free plan has no persistent disk, so the SQLite file is reset on
+      # each deploy or restart; the demo data is recreated automatically.
+      - key: DATABASE_PATH
+        value: /tmp/servisto.db

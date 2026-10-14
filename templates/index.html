@@ -1,0 +1,298 @@
+{% extends "base.html" %}
+
+{% block title %}Find Trusted Local Service Providers - Servisto{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-gradient text-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <!-- Hero Content -->
+            <div class="fade-in">
+                <h1 class="text-4xl md:text-6xl font-bold mb-6 leading-tight">
+                    Find Trusted
+                    <span class="text-blue-200">Local Services</span>
+                    Near You
+                </h1>
+                <p class="text-xl text-blue-100 mb-8 leading-relaxed">
+                    Connect with local professionals for plumbing, cleaning, painting, and more. 
+                    Compare providers, book a time slot and review the job afterwards.
+                </p>
+                <div class="flex flex-col sm:flex-row gap-4">
+                    {% if not current_user.is_authenticated %}
+                    <a href="{{ url_for('auth.register') }}" 
+                       class="bg-white text-blue-600 px-8 py-4 rounded-lg font-semibold text-lg hover:bg-blue-50 transition duration-300 shadow-lg text-center">
+                        Get Started Free
+                    </a>
+                    <a href="#how-it-works" 
+                       class="border-2 border-white text-white px-8 py-4 rounded-lg font-semibold text-lg hover:bg-white hover:text-blue-600 transition duration-300 text-center">
+                        How It Works
+                    </a>
+                    {% else %}
+                    {% if current_user.user_type == 'user' %}
+                    <a href="{{ url_for('user.search') }}" 
+                       class="bg-white text-blue-600 px-8 py-4 rounded-lg font-semibold text-lg hover:bg-blue-50 transition duration-300 shadow-lg text-center">
+                        Find Services
+                    </a>
+                    {% else %}
+                    <a href="{{ url_for('provider.dashboard') }}" 
+                       class="bg-white text-blue-600 px-8 py-4 rounded-lg font-semibold text-lg hover:bg-blue-50 transition duration-300 shadow-lg text-center">
+                        View Dashboard
+                    </a>
+                    {% endif %}
+                    {% endif %}
+                </div>
+                
+                <!-- Stats -->
+                <div class="flex flex-wrap gap-8 mt-12">
+                    <div class="text-center">
+                        <div class="text-3xl font-bold" data-stat="providers">{{ stats.providers }}</div>
+                        <div class="text-blue-200">Service Providers</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-3xl font-bold">{{ stats.completed }}</div>
+                        <div class="text-blue-200">Jobs Completed</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-3xl font-bold">{{ stats.service_types }}</div>
+                        <div class="text-blue-200">Service Categories</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Hero Image/Illustration -->
+            <div class="fade-in">
+                <div class="bg-white/10 backdrop-blur-sm rounded-2xl p-8 border border-white/20">
+                    <div class="grid grid-cols-2 gap-4">
+                        <!-- Service Cards -->
+                        <div class="bg-white/20 rounded-xl p-4 text-center backdrop-blur-sm border border-white/30">
+                            <i class="fas fa-faucet text-3xl text-blue-200 mb-3"></i>
+                            <div class="font-semibold">Plumbing</div>
+                        </div>
+                        <div class="bg-white/20 rounded-xl p-4 text-center backdrop-blur-sm border border-white/30">
+                            <i class="fas fa-broom text-3xl text-blue-200 mb-3"></i>
+                            <div class="font-semibold">Cleaning</div>
+                        </div>
+                        <div class="bg-white/20 rounded-xl p-4 text-center backdrop-blur-sm border border-white/30">
+                            <i class="fas fa-paint-roller text-3xl text-blue-200 mb-3"></i>
+                            <div class="font-semibold">Painting</div>
+                        </div>
+                        <div class="bg-white/20 rounded-xl p-4 text-center backdrop-blur-sm border border-white/30">
+                            <i class="fas fa-bolt text-3xl text-blue-200 mb-3"></i>
+                            <div class="font-semibold">Electrical</div>
+                        </div>
+                    </div>
+                    
+                    {% if latest_review %}
+                    <!-- Latest real review from the database -->
+                    <div class="bg-white rounded-xl p-6 mt-6 shadow-2xl">
+                        <div class="flex items-center mb-4">
+                            <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mr-4">
+                                <span class="text-blue-600 font-bold">{{ latest_review.first_name[0] }}{{ latest_review.last_name[0] }}</span>
+                            </div>
+                            <div>
+                                <div class="font-semibold text-gray-900">{{ latest_review.first_name }} {{ latest_review.last_name[0] }}.</div>
+                                <div class="flex text-yellow-400">
+                                    {% for i in range(5) %}<i class="{{ 'fas' if i < latest_review.rating else 'far' }} fa-star"></i>{% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                        <p class="text-gray-600 text-sm">"{{ latest_review.comment }}"</p>
+                        <p class="text-gray-400 text-xs mt-2">Review of {{ latest_review.business_name }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Services Section -->
+<section id="features" class="py-20 bg-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-16">
+            <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+                Services We Offer
+            </h2>
+            <p class="text-xl text-gray-600 max-w-2xl mx-auto">
+                From emergency repairs to regular maintenance, find the right professional for every job.
+            </p>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <!-- Plumbing Card -->
+            <div class="service-card bg-white rounded-2xl p-6 text-center group">
+                <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-blue-600 transition duration-300">
+                    <i class="fas fa-faucet text-2xl text-blue-600 group-hover:text-white transition duration-300"></i>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-900 mb-3">Plumbing</h3>
+                <p class="text-gray-600 mb-4">
+                    Leaky faucets, pipe repairs, installation, and emergency plumbing services.
+                </p>
+                <div class="text-blue-600 font-semibold">{% set n = type_counts.get("plumbing", 0) %}{{ n }} provider{{ "" if n == 1 else "s" }}</div>
+            </div>
+            
+            <!-- Cleaning Card -->
+            <div class="service-card bg-white rounded-2xl p-6 text-center group">
+                <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-green-600 transition duration-300">
+                    <i class="fas fa-broom text-2xl text-green-600 group-hover:text-white transition duration-300"></i>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-900 mb-3">Cleaning</h3>
+                <p class="text-gray-600 mb-4">
+                    Home cleaning, office cleaning, deep cleaning, and regular maintenance.
+                </p>
+                <div class="text-green-600 font-semibold">{% set n = type_counts.get("cleaning", 0) %}{{ n }} provider{{ "" if n == 1 else "s" }}</div>
+            </div>
+            
+            <!-- Painting Card -->
+            <div class="service-card bg-white rounded-2xl p-6 text-center group">
+                <div class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-purple-600 transition duration-300">
+                    <i class="fas fa-paint-roller text-2xl text-purple-600 group-hover:text-white transition duration-300"></i>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-900 mb-3">Painting</h3>
+                <p class="text-gray-600 mb-4">
+                    Interior, exterior painting, wall textures, and professional color consultation.
+                </p>
+                <div class="text-purple-600 font-semibold">{% set n = type_counts.get("painting", 0) %}{{ n }} provider{{ "" if n == 1 else "s" }}</div>
+            </div>
+            
+            <!-- Electrical Card -->
+            <div class="service-card bg-white rounded-2xl p-6 text-center group">
+                <div class="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-yellow-600 transition duration-300">
+                    <i class="fas fa-bolt text-2xl text-yellow-600 group-hover:text-white transition duration-300"></i>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-900 mb-3">Electrical</h3>
+                <p class="text-gray-600 mb-4">
+                    Wiring, installations, repairs, and electrical safety inspections.
+                </p>
+                <div class="text-yellow-600 font-semibold">{% set n = type_counts.get("electrical", 0) %}{{ n }} provider{{ "" if n == 1 else "s" }}</div>
+            </div>
+        </div>
+        
+        <!-- More Services -->
+        <div class="text-center mt-12">
+            <a href="{{ url_for('auth.register') }}" class="text-blue-600 hover:text-blue-700 font-semibold text-lg">
+                Browse all services <i class="fas fa-arrow-right ml-2"></i>
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- How It Works Section -->
+<section id="how-it-works" class="py-20 bg-gray-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-16">
+            <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+                How It Works
+            </h2>
+            <p class="text-xl text-gray-600 max-w-2xl mx-auto">
+                Getting the service you need is simple and straightforward
+            </p>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <!-- Step 1 -->
+            <div class="text-center">
+                <div class="relative">
+                    <div class="w-20 h-20 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-6 text-white text-2xl font-bold">
+                        1
+                    </div>
+                    <div class="absolute top-10 left-1/2 w-full h-0.5 bg-blue-200 hidden md:block"></div>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-900 mb-4">Search & Find</h3>
+                <p class="text-gray-600">
+                    Browse through verified service providers in your area. Filter by rating, price, and availability.
+                </p>
+            </div>
+            
+            <!-- Step 2 -->
+            <div class="text-center">
+                <div class="relative">
+                    <div class="w-20 h-20 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-6 text-white text-2xl font-bold">
+                        2
+                    </div>
+                    <div class="absolute top-10 left-1/2 w-full h-0.5 bg-blue-200 hidden md:block"></div>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-900 mb-4">Book & Confirm</h3>
+                <p class="text-gray-600">
+                    Choose your preferred time slot and book instantly. Get immediate confirmation.
+                </p>
+            </div>
+            
+            <!-- Step 3 -->
+            <div class="text-center">
+                <div class="w-20 h-20 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-6 text-white text-2xl font-bold">
+                    3
+                </div>
+                <h3 class="text-xl font-semibold text-gray-900 mb-4">Enjoy & Review</h3>
+                <p class="text-gray-600">
+                    Receive quality service and share your experience to help others make better choices.
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="py-20 bg-blue-600">
+    <div class="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
+        <h2 class="text-3xl md:text-4xl font-bold text-white mb-6">
+            Ready to Get Started?
+        </h2>
+        <p class="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
+            Create a free account to book a professional, or join as a provider and start getting bookings.
+        </p>
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            {% if not current_user.is_authenticated %}
+            <a href="{{ url_for('auth.register') }}" 
+               class="bg-white text-blue-600 px-8 py-4 rounded-lg font-semibold text-lg hover:bg-blue-50 transition duration-300 shadow-lg">
+                Sign Up Free
+            </a>
+            <a href="{{ url_for('auth.login') }}" 
+               class="border-2 border-white text-white px-8 py-4 rounded-lg font-semibold text-lg hover:bg-white hover:text-blue-600 transition duration-300">
+                Sign In
+            </a>
+            {% else %}
+            {% if current_user.user_type == 'user' %}
+            <a href="{{ url_for('user.search') }}" 
+               class="bg-white text-blue-600 px-8 py-4 rounded-lg font-semibold text-lg hover:bg-blue-50 transition duration-300 shadow-lg">
+                Find Services
+            </a>
+            {% else %}
+            <a href="{{ url_for('provider.dashboard') }}" 
+               class="bg-white text-blue-600 px-8 py-4 rounded-lg font-semibold text-lg hover:bg-blue-50 transition duration-300 shadow-lg">
+                View Dashboard
+            </a>
+            {% endif %}
+            {% endif %}
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Add some interactive animations
+document.addEventListener('DOMContentLoaded', function() {
+    // Animate service cards on scroll
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    };
+
+    const observer = new IntersectionObserver(function(entries) {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.style.animation = 'fadeIn 0.6s ease-out forwards';
+            }
+        });
+    }, observerOptions);
+
+    // Observe service cards
+    document.querySelectorAll('.service-card').forEach(card => {
+        card.style.opacity = '0';
+        observer.observe(card);
+    });
+});
+</script>
+{% endblock %}

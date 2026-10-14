@@ -1,0 +1,425 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Services - Servisto{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header -->
+    <div class="mb-8">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900 mb-2">Manage Services</h1>
+                <p class="text-gray-600">Add and manage the services you offer to customers</p>
+            </div>
+            <button onclick="openModal('add-service-modal')"
+                    class="mt-4 sm:mt-0 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition duration-200 font-semibold">
+                <i class="fas fa-plus mr-2"></i>Add New Service
+            </button>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Services List -->
+        <div class="lg:col-span-2">
+            {% if services %}
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                <!-- Services Header -->
+                <div class="p-6 border-b border-gray-100">
+                    <h2 class="text-xl font-semibold text-gray-900">Your Services ({{ services|length }})</h2>
+                </div>
+
+                <!-- Services List -->
+                <div class="divide-y divide-gray-100">
+                    {% for service in services %}
+                    <div class="p-6 hover:bg-gray-50 transition duration-200">
+                        <div class="flex items-start justify-between">
+                            <div class="flex-1">
+                                <div class="flex items-start justify-between mb-3">
+                                    <div>
+                                        <h3 class="text-lg font-semibold text-gray-900">{{ service.service_name }}</h3>
+                                        <p class="text-blue-600 font-medium">{{ service.base_price|inr }}</p>
+                                    </div>
+                                    <div class="flex items-center space-x-3">
+                                        <!-- Status Toggle -->
+                                        <div class="flex items-center">
+                                            <span class="mr-3 text-sm text-gray-600">Active</span>
+                                            <button onclick="toggleService({{ service.id }}, this)"
+                                                    class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 {% if service.is_active %}bg-blue-600{% else %}bg-gray-200{% endif %}"
+                                                    role="switch" aria-label="Offer {{ service.service_name }}" aria-checked="{{ 'true' if service.is_active else 'false' }}">
+                                                <span class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out {% if service.is_active %}translate-x-5{% else %}translate-x-0{% endif %}"></span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {% if service.description %}
+                                <p class="text-gray-600 mb-4">{{ service.description }}</p>
+                                {% endif %}
+
+                                <div class="flex items-center space-x-6 text-sm text-gray-500">
+                                    <div class="flex items-center">
+                                        <i class="fas fa-clock mr-2"></i>
+                                        <span>{{ service.duration_hours }} hour{% if service.duration_hours != 1 %}s{% endif %}</span>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <i class="fas fa-calendar mr-2"></i>
+                                    <span>Added {{ service.created_at }}</span>  <!-- Show raw date string -->
+                                    </div>
+                                    <div class="flex items-center">
+                                        <i class="fas fa-shopping-cart mr-2"></i>
+                                        <span>{{ service.bookings|length }} booking{% if service.bookings|length != 1 %}s{% endif %}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% else %}
+            <!-- Empty State -->
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-12 text-center">
+                <div class="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <i class="fas fa-tools text-gray-400 text-3xl"></i>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-900 mb-2">No Services Yet</h3>
+                <p class="text-gray-600 mb-6 max-w-md mx-auto">
+                    Start by adding your first service. Customers will be able to book these services directly from your profile.
+                </p>
+                <button onclick="openModal('add-service-modal')"
+                        class="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 transition duration-200 font-semibold">
+                    <i class="fas fa-plus mr-2"></i>Add Your First Service
+                </button>
+            </div>
+            {% endif %}
+
+            <!-- Tips Section -->
+            <div class="mt-8 bg-blue-50 border border-blue-200 rounded-2xl p-6">
+                <h3 class="text-lg font-semibold text-blue-900 mb-3">Service Tips</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                    <div class="flex items-start">
+                        <i class="fas fa-lightbulb text-blue-500 mt-1 mr-3"></i>
+                        <div class="text-blue-800">
+                            <strong>Be specific</strong> with service names to attract the right customers
+                        </div>
+                    </div>
+                    <div class="flex items-start">
+                        <i class="fas fa-lightbulb text-blue-500 mt-1 mr-3"></i>
+                        <div class="text-blue-800">
+                            <strong>Set competitive prices</strong> based on your experience and market rates
+                        </div>
+                    </div>
+                    <div class="flex items-start">
+                        <i class="fas fa-lightbulb text-blue-500 mt-1 mr-3"></i>
+                        <div class="text-blue-800">
+                            <strong>Include clear descriptions</strong> of what the service includes
+                        </div>
+                    </div>
+                    <div class="flex items-start">
+                        <i class="fas fa-lightbulb text-blue-500 mt-1 mr-3"></i>
+                        <div class="text-blue-800">
+                            <strong>Keep services active</strong> to appear in customer searches
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Sidebar -->
+        <div class="lg:col-span-1 space-y-6">
+            <!-- Services Summary -->
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Services Overview</h3>
+                
+                {% set active_services = services|selectattr('is_active')|list %}
+                {% set inactive_services = services|rejectattr('is_active')|list %}
+                {% set popular_service = services|sort(attribute='bookings|length', reverse=true)|first %}
+                
+                <div class="space-y-4">
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-600">Total Services</span>
+                        <span class="font-semibold text-gray-900">{{ services|length }}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-600">Active Services</span>
+                        <span class="font-semibold text-green-600">{{ active_services|length }}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-600">Inactive Services</span>
+                        <span class="font-semibold text-gray-600">{{ inactive_services|length }}</span>
+                    </div>
+                    <div class="pt-4 border-t border-gray-100">
+                        <div class="text-sm text-gray-600 mb-2">Most Popular Service</div>
+                        {% if popular_service and popular_service.bookings|length > 0 %}
+                        <div class="font-semibold text-gray-900">{{ popular_service.service_name }}</div>
+                        <div class="text-sm text-gray-600">{{ popular_service.bookings|length }} bookings</div>
+                        {% else %}
+                        <div class="text-sm text-gray-500">No bookings yet</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
+                <div class="space-y-3">
+                    <button onclick="openModal('add-service-modal')"
+                            class="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition duration-200 font-medium text-center">
+                        <i class="fas fa-plus mr-2"></i>Add New Service
+                    </button>
+                    <a href="{{ url_for('provider.profile') }}"
+                       class="w-full border border-gray-300 text-gray-700 py-3 px-4 rounded-lg hover:bg-gray-50 transition duration-200 font-medium text-center block">
+                        <i class="fas fa-edit mr-2"></i>Edit Profile
+                    </a>
+                    <a href="{{ url_for('provider.bookings') }}"
+                       class="w-full border border-gray-300 text-gray-700 py-3 px-4 rounded-lg hover:bg-gray-50 transition duration-200 font-medium text-center block">
+                        <i class="fas fa-calendar-check mr-2"></i>View Bookings
+                    </a>
+                </div>
+            </div>
+
+            <!-- Performance Tips -->
+            <div class="bg-orange-50 border border-orange-200 rounded-2xl p-6">
+                <h3 class="text-lg font-semibold text-orange-900 mb-3">Boost Your Bookings</h3>
+                <div class="space-y-3 text-sm text-orange-800">
+                    <div class="flex items-start">
+                        <i class="fas fa-chart-line mt-1 mr-3"></i>
+                        <div>Services with detailed descriptions get 2x more bookings</div>
+                    </div>
+                    <div class="flex items-start">
+                        <i class="fas fa-star mt-1 mr-3"></i>
+                        <div>Complete your profile to appear more professional</div>
+                    </div>
+                    <div class="flex items-start">
+                        <i class="fas fa-clock mt-1 mr-3"></i>
+                        <div>Set accurate time estimates to manage customer expectations</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Service Modal -->
+<div id="add-service-modal" class="modal hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="modal-backdrop relative top-20 mx-auto p-5 border w-full max-w-md shadow-lg rounded-2xl bg-white">
+        <div class="modal-content">
+            <!-- Modal Header -->
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-xl font-semibold text-gray-900">Add New Service</h3>
+                <button onclick="closeModal('add-service-modal')" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times text-lg"></i>
+                </button>
+            </div>
+
+            <!-- Add Service Form -->
+            <form method="POST" class="space-y-4">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <!-- Service Name -->
+                <div>
+                    <label for="service_name" class="block text-sm font-medium text-gray-700 mb-2">
+                        Service Name *
+                    </label>
+                    <input type="text" id="service_name" name="service_name" required
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
+                           placeholder="e.g., Basic Plumbing Repair">
+                </div>
+
+                <!-- Description -->
+                <div>
+                    <label for="description" class="block text-sm font-medium text-gray-700 mb-2">
+                        Description
+                    </label>
+                    <textarea id="description" name="description" rows="3"
+                              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 resize-none"
+                              placeholder="Describe what this service includes..."></textarea>
+                </div>
+
+                <!-- Price & Duration -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label for="base_price" class="block text-sm font-medium text-gray-700 mb-2">
+                            Base Price (₹) *
+                        </label>
+                        <input type="number" id="base_price" name="base_price" required step="0.01" min="0"
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
+                               placeholder="50.00">
+                    </div>
+
+                    <div>
+                        <label for="duration_hours" class="block text-sm font-medium text-gray-700 mb-2">
+                            Duration (hours)
+                        </label>
+                        <input type="number" id="duration_hours" name="duration_hours" step="0.5" min="0.5" value="1"
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
+                               placeholder="1.0">
+                    </div>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="flex justify-end space-x-3 pt-4">
+                    <button type="button" onclick="closeModal('add-service-modal')"
+                            class="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition duration-200 font-medium">
+                        Cancel
+                    </button>
+                    <button type="submit"
+                            class="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 transition duration-200 font-semibold">
+                        Add Service
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function toggleService(serviceId, button) {
+    button.disabled = true;
+    fetch(`/provider/service/${serviceId}/toggle`, { method: 'POST' })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            button.classList.toggle('bg-blue-600', data.is_active);
+            button.classList.toggle('bg-gray-200', !data.is_active);
+            const knob = button.querySelector('span');
+            if (knob) knob.classList.toggle('translate-x-5', data.is_active);
+            button.setAttribute('aria-checked', data.is_active ? 'true' : 'false');
+            showFlashMessage(data.message, 'success');
+        } else {
+            showFlashMessage(data.message, 'error');
+        }
+    })
+    .catch(() => showFlashMessage('An error occurred. Please try again.', 'error'))
+    .finally(() => { button.disabled = false; });
+}
+
+function showFlashMessage(message, type) {
+    // Create flash message element
+    const flashDiv = document.createElement('div');
+    flashDiv.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 ${
+        type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+    }`;
+    flashDiv.innerHTML = `
+        <div class="flex items-center">
+            <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'} mr-2"></i>
+            <span>${message}</span>
+        </div>
+    `;
+    document.body.appendChild(flashDiv);
+    
+    // Remove after 3 seconds
+    setTimeout(() => {
+        flashDiv.remove();
+    }, 3000);
+}
+
+// Modal functions
+function openModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+function closeModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        document.body.style.overflow = 'auto';
+    }
+}
+
+// Close modal when clicking backdrop
+document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('modal-backdrop')) {
+        const modal = e.target.closest('.modal');
+        if (modal) {
+            closeModal(modal.id);
+        }
+    }
+});
+
+// Form validation for add service
+const addServiceForm = document.querySelector('#add-service-modal form');
+if (addServiceForm) {
+    addServiceForm.addEventListener('submit', function(e) {
+        const serviceName = document.getElementById('service_name');
+        const basePrice = document.getElementById('base_price');
+        
+        if (!serviceName.value.trim()) {
+            e.preventDefault();
+            showFieldError(serviceName, 'Service name is required');
+            serviceName.focus();
+            return;
+        }
+        
+        if (!basePrice.value || parseFloat(basePrice.value) <= 0) {
+            e.preventDefault();
+            showFieldError(basePrice, 'Please enter a valid price');
+            basePrice.focus();
+            return;
+        }
+        
+        // Show loading state
+        const submitButton = this.querySelector('button[type="submit"]');
+        const originalText = submitButton.innerHTML;
+        submitButton.innerHTML = '<div class="loading-spinner"></div> Adding...';
+        submitButton.disabled = true;
+    });
+}
+
+function showFieldError(field, message) {
+    // Remove existing error
+    const existingError = field.parentNode.querySelector('.error-message');
+    if (existingError) {
+        existingError.remove();
+    }
+    
+    field.classList.add('border-red-500');
+    
+    const errorDiv = document.createElement('div');
+    errorDiv.className = 'error-message text-red-500 text-sm mt-1';
+    errorDiv.innerHTML = `<i class="fas fa-exclamation-circle mr-1"></i> ${message}`;
+    
+    field.parentNode.appendChild(errorDiv);
+}
+</script>
+
+<style>
+.loading-spinner-small {
+    border: 2px solid #f3f4f6;
+    border-top: 2px solid #3b82f6;
+    border-radius: 50%;
+    width: 16px;
+    height: 16px;
+    animation: spin 1s linear infinite;
+    display: inline-block;
+}
+
+.loading-spinner {
+    border: 2px solid #f3f4f6;
+    border-top: 2px solid #ffffff;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    animation: spin 1s linear infinite;
+    display: inline-block;
+    margin-right: 8px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.modal {
+    transition: all 0.3s ease;
+}
+</style>
+{% endblock %}

@@ -1,0 +1,265 @@
+{% extends "base.html" %}
+
+{% block title %}Book {{ provider.business_name }} - Servisto{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header -->
+    <div class="mb-8">
+        <a href="{{ url_for('user.provider_detail', provider_id=provider.id) }}" 
+           class="inline-flex items-center text-blue-600 hover:text-blue-700 font-medium mb-4">
+            <i class="fas fa-arrow-left mr-2"></i>
+            Back to Provider
+        </a>
+        <h1 class="text-3xl font-bold text-gray-900 mb-2">Book Service</h1>
+        <p class="text-gray-600">Schedule your service with {{ provider.business_name }}</p>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Booking Form -->
+        <div class="lg:col-span-2">
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                {% if provider.availability_status != 'available' %}
+                <div class="bg-yellow-50 border border-yellow-200 text-yellow-800 rounded-lg p-4 mb-6">
+                    <i class="fas fa-info-circle mr-2"></i>{{ provider.business_name }} is not taking new bookings right now.
+                </div>
+                {% endif %}
+                <form method="POST" class="space-y-6" id="booking-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <!-- Service Selection -->
+                    <div>
+                        <label class="block text-lg font-semibold text-gray-900 mb-4">Select Service</label>
+                        <div class="space-y-4">
+                            {% for service in services %}
+                            <label class="flex items-start p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-blue-300 transition duration-200 service-option">
+                                <input type="radio" name="service_id" value="{{ service.id }}" 
+                                       class="mt-1 text-blue-600 focus:ring-blue-500 service-radio" 
+                                       {% if service.id|string == selected_id %}checked{% endif %}>
+                                <div class="ml-4 flex-1">
+                                    <div class="flex justify-between items-start mb-2">
+                                        <h3 class="font-semibold text-gray-900">{{ service.service_name }}</h3>
+                                        <span class="service-price text-lg font-bold text-blue-600">{{ service.base_price|inr }}</span>
+                                    </div>
+                                    {% if service.description %}
+                                    <p class="text-gray-600 text-sm mb-2">{{ service.description }}</p>
+                                    {% endif %}
+                                    <div class="flex items-center text-sm text-gray-500">
+                                        <i class="fas fa-clock mr-1"></i>
+                                        <span>About {{ "%g"|format(service.duration_hours) }} hour{% if service.duration_hours != 1 %}s{% endif %}</span>
+                                    </div>
+                                </div>
+                            </label>
+                            {% endfor %}
+                            
+                            {% if not services %}
+                            <div class="text-center py-8 text-gray-500">
+                                <i class="fas fa-tools text-3xl mb-3 text-gray-300"></i>
+                                <p>No services available for booking.</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Service Date & Time -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label for="service_date" class="block text-sm font-medium text-gray-700 mb-2">
+                                Service Date *
+                            </label>
+                            <input type="date" id="service_date" name="service_date" required min="{{ today }}" value="{{ form.service_date or default_date }}"
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200">
+                            <p class="text-xs text-gray-500 mt-1">Select your preferred date</p>
+                        </div>
+
+                        <div>
+                            <label for="service_time" class="block text-sm font-medium text-gray-700 mb-2">
+                                Preferred Time *
+                            </label>
+                            <select id="service_time" name="service_time" required
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200">
+                                <option value="">Select a time</option>
+                                {% for value, label in time_slots %}
+                                <option value="{{ value }}" {% if form.service_time == value %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                            <p class="text-xs text-gray-500 mt-1">Slots already booked with this provider are greyed out</p>
+                        </div>
+                    </div>
+
+                    <!-- Service Address -->
+                    <div>
+                        <label for="address" class="block text-sm font-medium text-gray-700 mb-2">
+                            Service Address *
+                        </label>
+                        <textarea id="address" name="address" required rows="3"
+                                  placeholder="Enter the complete address where service is needed..."
+                                  class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 resize-none">{{ form.address or current_user.address or '' }}</textarea>
+                        <p class="text-xs text-gray-500 mt-1">Where should the provider come to perform the service?</p>
+                    </div>
+
+                    <!-- Problem Description -->
+                    <div>
+                        <label for="problem_description" class="block text-sm font-medium text-gray-700 mb-2">
+                            Service Details
+                        </label>
+                        <textarea id="problem_description" name="problem_description" rows="4"
+                                  placeholder="Describe the service needed, specific issues, or any special requirements..."
+                                  class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 resize-none">{{ form.problem_description or '' }}</textarea>
+                        <p class="text-xs text-gray-500 mt-1">Please provide as much detail as possible for better service</p>
+                    </div>
+
+                    <!-- Terms Agreement -->
+                    <div class="flex items-start">
+                        <input type="checkbox" id="terms_agreement" name="terms_agreement" required
+                               class="mt-1 text-blue-600 focus:ring-blue-500 rounded">
+                        <label for="terms_agreement" class="ml-3 text-sm text-gray-700">
+                            I understand that this is a booking request and the provider will confirm availability.
+                        </label>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <button type="submit" {% if not services or provider.availability_status != 'available' %}disabled{% endif %}
+                            class="w-full disabled:opacity-50 disabled:cursor-not-allowed bg-blue-600 text-white py-4 px-6 rounded-lg hover:bg-blue-700 focus:ring-4 focus:ring-blue-200 focus:outline-none transition duration-200 font-semibold text-lg">
+                        Send Booking Request
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Order Summary Sidebar -->
+        <div class="lg:col-span-1">
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sticky top-24">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Booking Summary</h3>
+                
+                <!-- Provider Info -->
+                <div class="flex items-center mb-6 p-4 bg-gray-50 rounded-lg">
+                    <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center mr-4">
+                        <i class="fas {{ getServiceIcon(provider.service_type) }} text-white"></i>
+                    </div>
+                    <div>
+                        <div class="font-semibold text-gray-900">{{ provider.business_name }}</div>
+                        <div class="text-sm text-gray-600">{{ provider.service_type|title }}</div>
+                    </div>
+                </div>
+
+                <!-- Selected Service -->
+                <div class="border-b border-gray-200 pb-4 mb-4">
+                    <h4 class="font-medium text-gray-700 mb-3">Selected Service</h4>
+                    <div id="selected-service" class="text-gray-600 text-sm">
+                        {% if selected_service %}
+                        {{ selected_service.service_name }} - {{ selected_service.base_price|inr }}
+                        {% else %}
+                        No service selected
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Price Breakdown -->
+                <div class="space-y-3 mb-6">
+                    <div class="flex justify-between text-sm">
+                        <span class="text-gray-600">Service Fee</span>
+                        <span id="service-fee" class="font-medium">
+                            {% if selected_service %}{{ selected_service.base_price|inr }}{% else %}₹0{% endif %}
+                        </span>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                        <span class="text-gray-600">Platform Fee</span>
+                        <span class="font-medium">₹0</span>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                        <span class="text-gray-600">Tax</span>
+                        <span class="font-medium">₹0</span>
+                    </div>
+                    <div class="border-t border-gray-200 pt-3">
+                        <div class="flex justify-between text-lg font-semibold">
+                            <span class="text-gray-900">Total</span>
+                            <span id="total-price" class="text-blue-600">
+                                {% if selected_service %}{{ selected_service.base_price|inr }}{% else %}₹0{% endif %}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Payment Info -->
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                    <div class="flex items-center mb-2">
+                        <i class="fas fa-credit-card text-blue-600 mr-2"></i>
+                        <span class="font-semibold text-blue-800">Pay after the job</span>
+                    </div>
+                    <p class="text-blue-700 text-sm">
+                        Nothing is paid online. You pay the provider directly once the work is done.
+                    </p>
+                </div>
+
+                <div class="text-sm text-gray-600 space-y-2">
+                    <div><i class="fas fa-calendar-times text-red-400 mr-2"></i>Free cancellation until the job is completed</div>
+                    <div><i class="fas fa-star text-yellow-400 mr-2"></i>Review the provider after the job</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script id="taken-slots" type="application/json">{{ taken_slots|tojson }}</script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const dateInput = document.getElementById('service_date');
+    const timeSelect = document.getElementById('service_time');
+    const taken = JSON.parse(document.getElementById('taken-slots').textContent);
+
+    // Grey out time slots this provider already has booked on the chosen date.
+    function refreshSlots() {
+        const busy = taken[dateInput.value] || [];
+        Array.from(timeSelect.options).forEach(option => {
+            if (!option.value) return;
+            const isBusy = busy.includes(option.value);
+            option.disabled = isBusy;
+            option.textContent = option.textContent.replace(' (booked)', '') + (isBusy ? ' (booked)' : '');
+            if (isBusy && option.selected) timeSelect.value = '';
+        });
+    }
+    dateInput.addEventListener('change', refreshSlots);
+    refreshSlots();
+
+    // Keep the summary in step with the chosen service.
+    const selectedServiceElement = document.getElementById('selected-service');
+    const serviceFeeElement = document.getElementById('service-fee');
+    const totalPriceElement = document.getElementById('total-price');
+    function highlight() {
+        document.querySelectorAll('.service-option').forEach(option => {
+            const radio = option.querySelector('.service-radio');
+            option.classList.toggle('border-blue-500', radio.checked);
+            option.classList.toggle('bg-blue-50', radio.checked);
+            if (radio.checked) {
+                const name = option.querySelector('h3').textContent;
+                const price = option.querySelector('.service-price').textContent;
+                selectedServiceElement.textContent = `${name} - ${price}`;
+                serviceFeeElement.textContent = price;
+                totalPriceElement.textContent = price;
+            }
+        });
+    }
+    document.querySelectorAll('.service-radio').forEach(radio => radio.addEventListener('change', highlight));
+    highlight();
+});
+</script>
+
+<style>
+.service-option {
+    transition: all 0.3s ease;
+}
+
+.service-option:hover {
+    border-color: #3b82f6;
+    transform: translateY(-2px);
+}
+
+/* Custom radio button styling */
+.service-radio {
+    width: 18px;
+    height: 18px;
+}
+</style>
+{% endblock %}

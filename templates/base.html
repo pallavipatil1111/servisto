@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Servisto{% endblock %}</title>
+    
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="description" content="Servisto: find, book and review trusted local home-service professionals.">
+    <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml">
+
+    <!-- Tailwind CSS, built from the templates (see package.json) -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/tailwind.css') }}">
+    <!-- Font Awesome icons, served locally -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='vendor/fontawesome/css/all.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex justify-between items-center h-16">
+                <!-- Logo -->
+                <div class="flex items-center">
+                    <a href="{{ url_for('index') }}" class="flex items-center space-x-2">
+                        <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-tools text-white text-sm"></i>
+                        </div>
+                        <span class="text-xl font-bold text-gray-800">Servisto</span>
+                    </a>
+                </div>
+
+                <!-- Navigation Links -->
+                <div class="hidden md:flex items-center space-x-8">
+                    {% if current_user.is_authenticated %}
+                        {% if current_user.user_type == 'user' %}
+                            <a href="{{ url_for('user.dashboard') }}" class="text-gray-600 hover:text-blue-600 transition duration-200">
+                                <i class="fas fa-home mr-1"></i>Dashboard
+                            </a>
+                            <a href="{{ url_for('user.search') }}" class="text-gray-600 hover:text-blue-600 transition duration-200">
+                                <i class="fas fa-search mr-1"></i>Find Services
+                            </a>
+                            <a href="{{ url_for('user.bookings') }}" class="text-gray-600 hover:text-blue-600 transition duration-200">
+                                <i class="fas fa-calendar mr-1"></i>My Bookings
+                            </a>
+                        {% else %}
+                            <a href="{{ url_for('provider.dashboard') }}" class="text-gray-600 hover:text-blue-600 transition duration-200">
+                                <i class="fas fa-tachometer-alt mr-1"></i>Dashboard
+                            </a>
+                            <a href="{{ url_for('provider.bookings') }}" class="text-gray-600 hover:text-blue-600 transition duration-200">
+                                <i class="fas fa-calendar-check mr-1"></i>Bookings
+                            </a>
+                            <a href="{{ url_for('provider.profile') }}" class="text-gray-600 hover:text-blue-600 transition duration-200">
+                                <i class="fas fa-user mr-1"></i>Profile
+                            </a>
+                        {% endif %}
+                    {% else %}
+                        <a href="{{ url_for('index') }}" class="text-gray-600 hover:text-blue-600 transition duration-200">Home</a>
+                        <a href="{{ url_for('index') }}#features" class="text-gray-600 hover:text-blue-600 transition duration-200">Services</a>
+                        <a href="{{ url_for('index') }}#how-it-works" class="text-gray-600 hover:text-blue-600 transition duration-200">How It Works</a>
+                    {% endif %}
+                </div>
+
+                <!-- Auth Buttons / User Menu -->
+                <div class="flex items-center space-x-4">
+                    {% if current_user.is_authenticated %}
+                        <div class="relative group" data-user-menu>
+                            <button type="button" aria-haspopup="true" class="flex items-center space-x-2 bg-blue-50 px-4 py-2 rounded-lg hover:bg-blue-100 transition duration-200">
+                                <div class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
+                                    <span class="text-white text-sm font-medium">
+                                        {{ current_user.first_name[0] }}{{ current_user.last_name[0] }}
+                                    </span>
+                                </div>
+                                <span class="text-gray-700 hidden md:block">{{ current_user.first_name }}</span>
+                                <i class="fas fa-chevron-down text-gray-500 text-xs"></i>
+                            </button>
+                            
+                            <!-- Dropdown Menu -->
+                            <div class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible group-focus-within:opacity-100 group-focus-within:visible transition-all duration-200">
+                                <div class="p-2">
+                                    <div class="px-3 py-2 border-b border-gray-100">
+                                        <p class="text-sm font-medium text-gray-800">{{ current_user.first_name }} {{ current_user.last_name }}</p>
+                                        <p class="text-xs text-gray-500">{{ current_user.email }}</p>
+                                    </div>
+                                    <a href="{% if current_user.user_type == 'user' %}{{ url_for('user.dashboard') }}{% else %}{{ url_for('provider.dashboard') }}{% endif %}" 
+                                       class="block px-3 py-2 text-sm text-gray-600 hover:bg-blue-50 rounded-md transition duration-150">
+                                        <i class="fas fa-tachometer-alt mr-2"></i>Dashboard
+                                    </a>
+                                    {% if current_user.user_type == 'user' %}
+                                    <a href="{{ url_for('user.search') }}" class="md:hidden block px-3 py-2 text-sm text-gray-600 hover:bg-blue-50 rounded-md"><i class="fas fa-search mr-2"></i>Find Services</a>
+                                    <a href="{{ url_for('user.bookings') }}" class="md:hidden block px-3 py-2 text-sm text-gray-600 hover:bg-blue-50 rounded-md"><i class="fas fa-calendar mr-2"></i>My Bookings</a>
+                                    {% else %}
+                                    <a href="{{ url_for('provider.bookings') }}" class="md:hidden block px-3 py-2 text-sm text-gray-600 hover:bg-blue-50 rounded-md"><i class="fas fa-calendar-check mr-2"></i>Bookings</a>
+                                    <a href="{{ url_for('provider.services') }}" class="block px-3 py-2 text-sm text-gray-600 hover:bg-blue-50 rounded-md"><i class="fas fa-tools mr-2"></i>My Services</a>
+                                    <a href="{{ url_for('provider.reviews') }}" class="block px-3 py-2 text-sm text-gray-600 hover:bg-blue-50 rounded-md"><i class="fas fa-star mr-2"></i>Reviews</a>
+                                    <a href="{{ url_for('provider.profile') }}" class="md:hidden block px-3 py-2 text-sm text-gray-600 hover:bg-blue-50 rounded-md"><i class="fas fa-user mr-2"></i>Profile</a>
+                                    {% endif %}
+                                    <form method="POST" action="{{ url_for('auth.logout') }}">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" id="logout"
+                                                class="w-full text-left block px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-md transition duration-150">
+                                            <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    {% else %}
+                        <a href="{{ url_for('auth.login') }}" class="text-gray-600 hover:text-blue-600 px-2 sm:px-4 py-2 transition duration-200">
+                            Login
+                        </a>
+                        <a href="{{ url_for('auth.register') }}" class="bg-blue-600 text-white px-4 sm:px-6 py-2 rounded-lg hover:bg-blue-700 transition duration-200 shadow-md">
+                            Sign Up
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="max-w-4xl mx-auto px-4 mt-4">
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} p-4 rounded-lg mb-4 border-l-4 {% if category == 'success' %}bg-green-50 border-green-500 text-green-700{% elif category == 'error' %}bg-red-50 border-red-500 text-red-700{% else %}bg-blue-50 border-blue-500 text-blue-700{% endif %}">
+                        <div class="flex items-center">
+                            <i class="fas {% if category == 'success' %}fa-check-circle{% elif category == 'error' %}fa-exclamation-circle{% else %}fa-info-circle{% endif %} mr-3"></i>
+                            <span>{{ message }}</span>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <!-- Main Content -->
+    <main class="min-h-screen">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white mt-16">
+        <div class="max-w-7xl mx-auto px-4 py-12">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div class="col-span-1 md:col-span-2">
+                    <div class="flex items-center space-x-2 mb-4">
+                        <div class="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-tools text-white text-sm"></i>
+                        </div>
+                        <span class="text-xl font-bold">Servisto</span>
+                    </div>
+                    <p class="text-gray-300 mb-4 max-w-md">
+                        Connecting you with trusted local service providers for all your home service needs. 
+                        Quality service, just a click away.
+                    </p>
+                </div>
+
+                <div>
+                    <h3 class="font-semibold text-lg mb-4">Popular services</h3>
+                    <ul class="space-y-2 text-gray-300">
+                        {% for kind in ['plumbing', 'electrical', 'cleaning', 'painting'] %}
+                        <li><a href="{{ url_for('user.search', service_type=kind) }}" class="hover:text-white transition duration-200">{{ kind|title }}</a></li>
+                        {% endfor %}
+                    </ul>
+                </div>
+
+                <div>
+                    <h3 class="font-semibold text-lg mb-4">Get started</h3>
+                    <ul class="space-y-2 text-gray-300">
+                        <li><a href="{{ url_for('auth.register') }}" class="hover:text-white transition duration-200">Book a service</a></li>
+                        <li><a href="{{ url_for('auth.register', type='provider') }}" class="hover:text-white transition duration-200">Join as a provider</a></li>
+                        <li><a href="{{ url_for('auth.login') }}" class="hover:text-white transition duration-200">Log in</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="border-t border-gray-700 mt-8 pt-8 text-center text-gray-400">
+                <p>&copy; {{ now_year }} Servisto. Built by Pallavi Patil.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

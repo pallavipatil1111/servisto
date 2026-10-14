@@ -1,0 +1,211 @@
+{% extends "base.html" %}
+
+{% block title %}My Bookings - Servisto{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header -->
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900 mb-2">My Bookings</h1>
+        <p class="text-gray-600">Manage your service appointments and view booking history</p>
+    </div>
+
+    <!-- Stats & Filters -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
+        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+            <!-- Booking Stats -->
+            <div class="flex flex-wrap gap-6 mb-4 lg:mb-0">
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-gray-900">{{ all_bookings|length }}</div>
+                    <div class="text-sm text-gray-600">Total Bookings</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-blue-600">{{ all_bookings|selectattr('status', 'equalto', 'pending')|list|length }}</div>
+                    <div class="text-sm text-gray-600">Pending</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-green-600">{{ all_bookings|selectattr('status', 'equalto', 'completed')|list|length }}</div>
+                    <div class="text-sm text-gray-600">Completed</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-gray-600">{{ all_bookings|selectattr('status', 'equalto', 'cancelled')|list|length }}</div>
+                    <div class="text-sm text-gray-600">Cancelled</div>
+                </div>
+            </div>
+
+            <!-- Filters -->
+            <div class="flex items-center space-x-4">
+                <span class="text-sm font-medium text-gray-700 hidden sm:block">Filter:</span>
+                <div class="flex flex-wrap gap-2">
+                    <a href="{{ url_for('user.bookings') }}" 
+                       class="px-3 py-1 rounded-full text-sm font-medium transition duration-200 {% if status_filter == 'all' %}bg-blue-100 text-blue-800{% else %}bg-gray-100 text-gray-600 hover:bg-gray-200{% endif %}">
+                        All
+                    </a>
+                    <a href="{{ url_for('user.bookings', status='pending') }}" 
+                       class="px-3 py-1 rounded-full text-sm font-medium transition duration-200 {% if status_filter == 'pending' %}bg-yellow-100 text-yellow-800{% else %}bg-gray-100 text-gray-600 hover:bg-gray-200{% endif %}">
+                        Pending
+                    </a>
+                    <a href="{{ url_for('user.bookings', status='confirmed') }}" 
+                       class="px-3 py-1 rounded-full text-sm font-medium transition duration-200 {% if status_filter == 'confirmed' %}bg-blue-100 text-blue-800{% else %}bg-gray-100 text-gray-600 hover:bg-gray-200{% endif %}">
+                        Confirmed
+                    </a>
+                    <a href="{{ url_for('user.bookings', status='completed') }}" 
+                       class="px-3 py-1 rounded-full text-sm font-medium transition duration-200 {% if status_filter == 'completed' %}bg-green-100 text-green-800{% else %}bg-gray-100 text-gray-600 hover:bg-gray-200{% endif %}">
+                        Completed
+                    </a>
+                    <a href="{{ url_for('user.bookings', status='cancelled') }}" 
+                       class="px-3 py-1 rounded-full text-sm font-medium transition duration-200 {% if status_filter == 'cancelled' %}bg-red-100 text-red-800{% else %}bg-gray-100 text-gray-600 hover:bg-gray-200{% endif %}">
+                        Cancelled
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bookings List -->
+    <div class="space-y-6">
+        {% for booking in bookings %}
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition duration-200">
+            <div class="p-6">
+                <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between">
+                    <!-- Booking Info -->
+                    <div class="flex-1">
+                        <div class="flex items-start justify-between mb-4">
+                            <div class="flex items-center">
+                                <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center mr-4">
+                                    <i class="fas {{ getServiceIcon(booking.service_type) }} text-white"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-semibold text-gray-900">{{ booking.business_name }}</h3>
+                                    <p class="text-blue-600">{{ booking.service_name }}</p>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <span class="px-3 py-1 rounded-full text-sm font-medium 
+                                    {% if booking.status == 'completed' %}bg-green-100 text-green-800
+                                    {% elif booking.status == 'confirmed' %}bg-blue-100 text-blue-800
+                                    {% elif booking.status == 'pending' %}bg-yellow-100 text-yellow-800
+                                    {% else %}bg-red-100 text-red-800{% endif %}">
+                                    {{ booking.status|title }}
+                                </span>
+                                <div class="text-lg font-bold text-gray-900 mt-2">{{ booking.total_amount|inr }}</div>
+                            </div>
+                        </div>
+
+                        <!-- Booking Details -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm text-gray-600 mb-4">
+                            <div class="flex items-center">
+                                <i class="fas fa-calendar mr-2 text-gray-400"></i>
+                                <span>{{ booking.service_date }}</span>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="fas fa-clock mr-2 text-gray-400"></i>
+                                <span>{{ booking.service_time|time12 }}</span>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="fas fa-map-marker-alt mr-2 text-gray-400"></i>
+                                <span class="truncate">{{ booking.address.split(',')[0] }}</span>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="fas fa-tools mr-2 text-gray-400"></i>
+                                <span>{{ booking.service_type|title }}</span>
+                            </div>
+                        </div>
+
+                        <!-- Problem Description -->
+                        {% if booking.problem_description %}
+                        <div class="mb-4">
+                            <p class="text-gray-600 text-sm"><strong>Service Details:</strong> {{ booking.problem_description }}</p>
+                        </div>
+                        {% endif %}
+
+                        <!-- Provider Contact -->
+                        <div class="flex items-center text-sm text-gray-600">
+                            <i class="fas fa-user mr-2 text-gray-400"></i>
+                            <span class="mr-4">Provider: {{ booking.first_name }} {{ booking.last_name }}</span>
+                            {% if booking.phone %}
+                            <i class="fas fa-phone mr-2 text-gray-400"></i>
+                            <span>{{ booking.phone }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="flex lg:flex-col space-x-3 lg:space-x-0 lg:space-y-3 mt-4 lg:mt-0 lg:ml-6">
+                        {% if booking.status in ['pending', 'confirmed'] %}
+                        <form method="POST" action="{{ url_for('user.cancel_booking', booking_id=booking.id) }}"
+                              class="flex-1 lg:flex-none" onsubmit="return confirm('Are you sure you want to cancel this booking?')">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" data-cancel="{{ booking.id }}"
+                                    class="w-full bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 transition duration-200 font-medium text-sm text-center">
+                                Cancel
+                            </button>
+                        </form>
+                        {% endif %}
+
+                        {% if booking.status == 'completed' and not booking.review %}
+                        <a href="{{ url_for('user.review_booking', booking_id=booking.id) }}" 
+                           class="flex-1 lg:flex-none bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition duration-200 font-medium text-sm text-center">
+                            Leave Review
+                        </a>
+                        {% elif booking.status == 'completed' and booking.review %}
+                        <button class="flex-1 lg:flex-none bg-gray-100 text-gray-600 py-2 px-4 rounded-lg font-medium text-sm cursor-not-allowed">
+                            Reviewed
+                        </button>
+                        {% endif %}
+
+                        <a href="{{ url_for('user.provider_detail', provider_id=booking.provider_id) }}" 
+                           class="flex-1 lg:flex-none border border-gray-300 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-50 transition duration-200 font-medium text-sm text-center">
+                            View Provider
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Booking Footer -->
+            <div class="px-6 py-4 bg-gray-50 border-t border-gray-100">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between text-sm text-gray-500">
+                    <div class="flex items-center mb-2 sm:mb-0">
+                        <i class="fas fa-info-circle mr-2"></i>
+                            <span>Booked on {{ booking.created_at_formatted }}</span>
+                    </div>
+                    <div class="flex items-center">
+                        <i class="fas fa-hashtag mr-2"></i>
+                        <span>Booking ID: #{{ booking.id }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <!-- Empty State -->
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-12 text-center">
+            <div class="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                <i class="fas fa-calendar-times text-gray-400 text-3xl"></i>
+            </div>
+            <h3 class="text-xl font-semibold text-gray-900 mb-2">No Bookings Found</h3>
+            <p class="text-gray-600 mb-6 max-w-md mx-auto">
+                {% if request.args.get('status') %}
+                You don't have any {{ request.args.get('status') }} bookings at the moment.
+                {% else %}
+                You haven't made any bookings yet. Find great service providers and book your first service!
+                {% endif %}
+            </p>
+            <div class="space-x-4">
+                {% if request.args.get('status') %}
+                <a href="{{ url_for('user.bookings') }}" 
+                   class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition duration-200 font-medium">
+                    View All Bookings
+                </a>
+                {% else %}
+                <a href="{{ url_for('user.search') }}" 
+                   class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition duration-200 font-medium">
+                    Find Services
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+{% endblock %}
