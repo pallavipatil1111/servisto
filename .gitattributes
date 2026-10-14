@@ -1,0 +1,5 @@
+# Count only hand-written code in GitHub's language bar:
+# Jinja templates are HTML files, and the Tailwind build is generated.
+templates/** linguist-detectable=false
+static/css/tailwind.css linguist-generated=true
+static/vendor/** linguist-vendored=true
