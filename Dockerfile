@@ -17,4 +17,4 @@ VOLUME ["/data"]
 EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=3s \
     CMD python -c "import os, urllib.request; urllib.request.urlopen('http://127.0.0.1:%s/healthz' % os.environ.get('PORT', '8000'))"
-CMD ["sh", "-c", "gunicorn 'main:create_app()' --bind 0.0.0.0:${PORT} --workers 2 --access-logfile -"]
+CMD ["sh", "-c", "gunicorn 'main:create_app()' --bind 0.0.0.0:${PORT} --workers 2 --preload --access-logfile -"]

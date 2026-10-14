@@ -37,12 +37,17 @@ PROVIDERS = [
 
 
 def seed_demo_data(path):
+    password_hash = generate_password_hash(DEMO_PASSWORD)
     conn = connect(path)
+    conn.isolation_level = None
+    # Take the write lock before checking, so two server processes starting
+    # at the same moment can't both decide the database is empty.
+    conn.execute('BEGIN IMMEDIATE')
     if conn.execute('SELECT COUNT(*) FROM users').fetchone()[0] > 0:
+        conn.execute('ROLLBACK')
         conn.close()
         return False
 
-    password_hash = generate_password_hash(DEMO_PASSWORD)
     customer_ids = []
     for email, first, last, phone, address in CUSTOMERS:
         cur = conn.execute(
@@ -98,6 +103,6 @@ def seed_demo_data(path):
          'Thank you, Ananya! Happy to help any time.'))
     refresh_provider_rating(conn, plumber[0])
 
-    conn.commit()
+    conn.execute('COMMIT')
     conn.close()
     return True

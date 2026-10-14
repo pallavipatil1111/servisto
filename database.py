@@ -35,7 +35,8 @@ sqlite3.register_adapter(datetime, lambda d: d.strftime('%Y-%m-%d %H:%M:%S'))
 
 
 def connect(path):
-    conn = sqlite3.connect(path, detect_types=sqlite3.PARSE_DECLTYPES)
+    # timeout: wait up to 10 s for another process's write to finish instead of failing.
+    conn = sqlite3.connect(path, detect_types=sqlite3.PARSE_DECLTYPES, timeout=10)
     conn.row_factory = sqlite3.Row  # access columns by name
     conn.execute('PRAGMA foreign_keys = ON')
     return conn

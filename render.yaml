@@ -5,7 +5,7 @@ services:
     runtime: python
     plan: free
     buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn 'main:create_app()' --bind 0.0.0.0:$PORT --workers 2
+    startCommand: gunicorn 'main:create_app()' --bind 0.0.0.0:$PORT --workers 2 --preload
     healthCheckPath: /healthz
     envVars:
       - key: PYTHON_VERSION

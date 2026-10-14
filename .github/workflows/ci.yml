@@ -59,14 +59,19 @@ jobs:
         run: |
           docker run -d --name servisto -p 8000:8000 -e SECRET_KEY=ci-secret servisto
           for i in $(seq 1 30); do curl -sf http://localhost:8000/healthz && break; sleep 1; done
-          curl -sf http://localhost:8000/ | grep -q "Jadhav Plumbing Works"
+          # Save pages to files before grepping: "curl | grep -q" can fail under pipefail.
+          curl -sf http://localhost:8000/ -o home.html
+          grep -q "Jadhav Plumbing Works" home.html
           # Log in as the demo customer with the CSRF token from the login page.
-          token=$(curl -sf -c jar http://localhost:8000/login | grep -o 'name="csrf-token" content="[^"]*"' | cut -d'"' -f4)
-          curl -sf -b jar -c jar -o /dev/null -w '%{redirect_url}\n' \
+          curl -sf -c jar http://localhost:8000/login -o login.html
+          token=$(grep -o 'name="csrf-token" content="[^"]*"' login.html | cut -d'"' -f4)
+          curl -sf -b jar -c jar -o /dev/null -w '%{redirect_url}' \
             --data-urlencode "csrf_token=$token" \
             --data-urlencode "email=customer@servisto.demo" --data-urlencode "password=demo1234" \
-            http://localhost:8000/login | grep -q '/user/dashboard'
-          curl -sf -b jar http://localhost:8000/user/bookings | grep -q "BrightSpark Electricals"
-          [ "$(docker inspect -f '{{.Config.User}}' servisto)" = "servisto" ]
+            http://localhost:8000/login > redirect.txt
+          grep -q '/user/dashboard' redirect.txt
+          curl -sf -b jar http://localhost:8000/user/bookings -o bookings.html
+          grep -q "BrightSpark Electricals" bookings.html
+          test "$(docker inspect -f '{{.Config.User}}' servisto)" = "servisto"
       - if: failure()
         run: docker logs servisto
